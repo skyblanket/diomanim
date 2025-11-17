@@ -1,0 +1,21 @@
+[package]
+name = "diomanim"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dioxus = "0.7.1"
+dioxus-desktop = "0.7.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+glam = "0.30.9"
+instant = "0.1.13"
+wgpu = "27.0.1"
+raw-window-handle = "0.6.2"
+bytemuck = { version = "1.24.0", features = ["derive"] }
+pollster = "0.4.0"
+tokio = "1.48.0"
+png = "0.18.0"
+ttf-parser = "0.25.1"
+futures-channel = "0.3.31"
+bytemuck_derive = "1.10.2"

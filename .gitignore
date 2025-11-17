@@ -1,0 +1,40 @@
+# Rust
+/target
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Output files
+*.png
+*.mp4
+*.webm
+*.gif
+frames/
+output/
+
+# Backup files
+*.backup
+*.backup[0-9]
+*.fixed
+*.old
+*.tmp
+
+# Debug
+debug/
+*.dSYM/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dioxus
+dist/
+.dioxus/
