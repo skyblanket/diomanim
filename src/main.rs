@@ -95,6 +95,17 @@ fn main() {
             scene.update_animations(delta_time);
             scene.update_transforms();
 
+            // Create command encoder
+            let mut encoder = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Frame Render Encoder"),
+            });
+
+            // Begin render pass once per frame
+            let mut render_pass = renderer.begin_render_pass(&mut encoder, &output_view, None);
+            
+            render_pass.set_pipeline(renderer.get_pipeline());
+            render_pass.set_bind_group(0, renderer.get_transform_bind_group(), &[]);
+
             let renderables = scene.get_visible_renderables();
             for (transform_uniform, renderable) in renderables {
                 renderer.update_transform(&transform_uniform);
@@ -105,9 +116,21 @@ fn main() {
                         color: *color,
                         position: Vector3::zero(),
                     };
-                    renderer.render_circle(&circle, *color, &output_view);
+                    renderer.draw_circle(&circle, *color, &mut render_pass);
+                } else if let Some((width, height, color)) = renderable.as_rectangle() {
+                    renderer.draw_rectangle(*width, *height, *color, &mut render_pass);
+                } else if let Some((start, end, color, thickness)) = renderable.as_line() {
+                    renderer.draw_line(*start, *end, *color, *thickness, &mut render_pass);
+                } else if let Some((start, end, color, thickness)) = renderable.as_arrow() {
+                    renderer.draw_arrow(*start, *end, *color, *thickness, &mut render_pass);
                 }
             }
+            
+            // End render pass
+            drop(render_pass);
+
+            // Submit command (once per frame instead of per object)
+            renderer.get_queue().submit(std::iter::once(encoder.finish()));
 
             let frame_filename = format!("{}/frame_{:05}.png", frames_dir, frame_count);
             save_texture_to_png(&renderer, &output_texture, WIDTH, HEIGHT, &frame_filename);

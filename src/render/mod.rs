@@ -39,7 +39,7 @@
 //! ```
 
 use crate::mobjects::Circle;
-use crate::core::Color;
+use crate::core::{Color, Vector3};
 use wgpu::util::DeviceExt;
 
 #[repr(C)]
@@ -221,6 +221,36 @@ impl ShapeRenderer {
         })
     }
 
+    pub fn begin_render_pass<'a>(
+        &self, 
+        encoder: &'a mut wgpu::CommandEncoder, 
+        output_view: &'a wgpu::TextureView, 
+        clear_color: Option<wgpu::Color>
+    ) -> wgpu::RenderPass<'a> {
+        let clear_color = clear_color.unwrap_or(wgpu::Color {
+            r: 0.95,
+            g: 0.95,
+            b: 0.95,
+            a: 1.0,
+        });
+        
+        encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("Shape Render Pass"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view: output_view,
+                resolve_target: None,
+                depth_slice: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(clear_color),
+                    store: wgpu::StoreOp::Store,
+                },
+            })],
+            depth_stencil_attachment: None,
+            occlusion_query_set: None,
+            timestamp_writes: None,
+        })
+    }
+    
     pub fn render_circle(&self, circle: &Circle, color: Color, output_view: &wgpu::TextureView) {
         // Create vertices for a circle
         let mut vertices = Vec::new();
@@ -228,13 +258,7 @@ impl ShapeRenderer {
         let center = circle.position;
         let radius = circle.radius;
 
-        // Convert color from 0-255 to 0.0-1.0
-        let r = (color.r as f32) / 255.0;
-        let g = (color.g as f32) / 255.0;
-        let b = (color.b as f32) / 255.0;
-        let a = (color.a as f32) / 255.0;
-
-        let color_array = [r, g, b, a];
+        let color_array = color.to_f32_array();
 
         // Create center vertex
         vertices.push(Vertex {
@@ -320,6 +344,256 @@ impl ShapeRenderer {
         self.queue.submit(std::iter::once(encoder.finish()));
     }
 
+    pub fn draw_circle(&self, circle: &Circle, color: Color, render_pass: &mut wgpu::RenderPass) {
+        // Create vertices for a circle
+        let mut vertices = Vec::new();
+        let segments = 32;
+        let center = circle.position;
+        let radius = circle.radius;
+
+        let color_array = color.to_f32_array();
+
+        // Create center vertex
+        vertices.push(Vertex {
+            position: [center.x, center.y, 0.0],
+            color: color_array,
+        });
+
+        // Create circle vertices
+        for i in 0..=segments {
+            let angle = 2.0 * std::f32::consts::PI * (i as f32) / (segments as f32);
+            let x = center.x + radius * angle.cos();
+            let y = center.y + radius * angle.sin();
+            
+            vertices.push(Vertex {
+                position: [x, y, 0.0],
+                color: color_array,
+            });
+        }
+
+        // Create index buffer
+        let mut indices = Vec::new();
+        for i in 1..=segments {
+            indices.push(0);
+            indices.push(i);
+            indices.push(i + 1);
+        }
+
+        // Create GPU buffers
+        let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex Buffer"),
+            contents: bytemuck::cast_slice(&vertices),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
+        let index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Index Buffer"),
+            contents: bytemuck::cast_slice(&indices),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+
+        // Set vertex and index buffers
+        render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+        render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+        
+        // Draw
+        render_pass.draw_indexed(0..indices.len() as u32, 0, 0..1);
+    }
+
+    pub fn draw_rectangle(&self, width: f32, height: f32, color: Color, render_pass: &mut wgpu::RenderPass) {
+        let center = [0.0, 0.0, 0.0];  // Position handled by transform uniform
+        let half_width = width / 2.0;
+        let half_height = height / 2.0;
+
+        let color_array = color.to_f32_array();
+
+        // Create vertices for a rectangle (two triangles)
+        let vertices = vec![
+            Vertex {
+                position: [center[0] - half_width, center[1] - half_height, center[2]],
+                color: color_array,
+            },
+            Vertex {
+                position: [center[0] + half_width, center[1] - half_height, center[2]],
+                color: color_array,
+            },
+            Vertex {
+                position: [center[0] + half_width, center[1] + half_height, center[2]],
+                color: color_array,
+            },
+            Vertex {
+                position: [center[0] - half_width, center[1] + half_height, center[2]],
+                color: color_array,
+            },
+        ];
+
+        // Create index buffer for two triangles
+        let indices = vec![0, 1, 2, 0, 2, 3];
+
+        // Create GPU buffers
+        let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Rectangle Vertex Buffer"),
+            contents: bytemuck::cast_slice(&vertices),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
+        let index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Rectangle Index Buffer"),
+            contents: bytemuck::cast_slice(&indices),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+
+        // Set vertex and index buffers
+        render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+        render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+        
+        // Draw
+        render_pass.draw_indexed(0..indices.len() as u32, 0, 0..1);
+    }
+
+    pub fn draw_line(&self, start: Vector3, end: Vector3, color: Color, thickness: f32, render_pass: &mut wgpu::RenderPass) {
+        let dir = Vector3::new(end.x - start.x, end.y - start.y, 0.0);
+        let length = (dir.x * dir.x + dir.y * dir.y).sqrt();
+        
+        if length < 0.001 {
+            return; // Skip degenerate lines
+        }
+        
+        // Normalize direction
+        let dir_norm = Vector3::new(dir.x / length, dir.y / length, 0.0);
+        let perp = Vector3::new(-dir_norm.y, dir_norm.x, 0.0);
+        
+        let half_thickness = thickness / 200.0; // Scale down for reasonable thickness
+        let half_length = length / 2.0;
+        
+        // Center point of the line
+        let center_x = (start.x + end.x) / 2.0;
+        let center_y = (start.y + end.y) / 2.0;
+
+        let color_array = color.to_f32_array();
+        
+        // Create vertices for a thick line (rectangle)
+        let vertices = vec![
+            Vertex {
+                position: [center_x - dir_norm.x * half_length - perp.x * half_thickness,
+                          center_y - dir_norm.y * half_length - perp.y * half_thickness, 0.0],
+                color: color_array,
+            },
+            Vertex {
+                position: [center_x + dir_norm.x * half_length - perp.x * half_thickness,
+                          center_y + dir_norm.y * half_length - perp.y * half_thickness, 0.0],
+                color: color_array,
+            },
+            Vertex {
+                position: [center_x + dir_norm.x * half_length + perp.x * half_thickness,
+                          center_y + dir_norm.y * half_length + perp.y * half_thickness, 0.0],
+                color: color_array,
+            },
+            Vertex {
+                position: [center_x - dir_norm.x * half_length + perp.x * half_thickness,
+                          center_y - dir_norm.y * half_length + perp.y * half_thickness, 0.0],
+                color: color_array,
+            },
+        ];
+        
+        // Create index buffer for two triangles
+        let indices = vec![0, 1, 2, 0, 2, 3];
+        
+        // Create GPU buffers
+        let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Line Vertex Buffer"),
+            contents: bytemuck::cast_slice(&vertices),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+        
+        let index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Line Index Buffer"),
+            contents: bytemuck::cast_slice(&indices),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+        
+        // Set vertex and index buffers
+        render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+        render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+        
+        // Draw
+        render_pass.draw_indexed(0..indices.len() as u32, 0, 0..1);
+    }
+
+    pub fn draw_arrow(&self, start: Vector3, end: Vector3, color: Color, thickness: f32, render_pass: &mut wgpu::RenderPass) {
+        // First draw the line (shaft)
+        let dir = Vector3::new(end.x - start.x, end.y - start.y, 0.0);
+        let length = (dir.x * dir.x + dir.y * dir.y).sqrt();
+        
+        if length < 0.001 {
+            return; // Skip degenerate arrows
+        }
+        
+        let tip_size = 0.05; // 5% of scene size for tip
+        
+        // Calculate line end (where tip starts)
+        let line_end = if length > tip_size {
+            Vector3::new(
+                start.x + dir.x * (1.0 - tip_size / length),
+                start.y + dir.y * (1.0 - tip_size / length),
+                start.z,
+            )
+        } else {
+            start // Very short arrow, minimal shaft
+        };
+        
+        // Draw the shaft
+        self.draw_line(start, line_end, color, thickness, render_pass);
+        
+        // Draw the triangular tip
+        let dir_norm = Vector3::new(dir.x / length, dir.y / length, 0.0);
+        let perp = Vector3::new(-dir_norm.y, dir_norm.x, 0.0);
+        let tip_half_width = tip_size * 0.5;
+
+        let color_array = color.to_f32_array();
+        
+        // Tip vertices - triangle pointing to end point
+        let vertices = vec![
+            Vertex {
+                position: [end.x, end.y, end.z],
+                color: color_array,
+            },
+            Vertex {
+                position: [line_end.x + perp.x * tip_half_width,
+                          line_end.y + perp.y * tip_half_width, end.z],
+                color: color_array,
+            },
+            Vertex {
+                position: [line_end.x - perp.x * tip_half_width,
+                          line_end.y - perp.y * tip_half_width, end.z],
+                color: color_array,
+            },
+        ];
+        
+        // Triangle indices
+        let indices = vec![0, 1, 2];
+        
+        // Create GPU buffers
+        let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Arrow Tip Vertex Buffer"),
+            contents: bytemuck::cast_slice(&vertices),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+        
+        let index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Arrow Tip Index Buffer"),
+            contents: bytemuck::cast_slice(&indices),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+        
+        // Set vertex and index buffers
+        render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+        render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+        
+        // Draw the tip
+        render_pass.draw_indexed(0..indices.len() as u32, 0, 0..1);
+    }
+
     pub fn update_transform(&self, transform: &TransformUniform) {
         self.queue.write_buffer(
             &self.transform_buffer,
@@ -334,5 +608,13 @@ impl ShapeRenderer {
 
     pub fn get_queue(&self) -> &wgpu::Queue {
         &self.queue
+    }
+
+    pub fn get_pipeline(&self) -> &wgpu::RenderPipeline {
+        &self.pipeline
+    }
+
+    pub fn get_transform_bind_group(&self) -> &wgpu::BindGroup {
+        &self.transform_bind_group
     }
 }

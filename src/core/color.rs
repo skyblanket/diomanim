@@ -95,6 +95,11 @@ impl Color {
     pub fn as_slice_rgba(&self) -> [f32; 4] {
         [self.r, self.g, self.b, self.a]
     }
+
+    /// Convert color to f32 array for GPU rendering (already in 0.0-1.0 range)
+    pub fn to_f32_array(&self) -> [f32; 4] {
+        [self.r, self.g, self.b, self.a]
+    }
 }
 
 impl Default for Color {
@@ -308,5 +313,15 @@ mod tests {
     fn test_color_default() {
         let c = Color::default();
         assert_eq!(c, Color::BLACK);
+    }
+
+    #[test]
+    fn test_color_to_f32_array() {
+        let c = Color::from_rgb8(255, 128, 0);
+        let arr = c.to_f32_array();
+        assert!((arr[0] - 1.0).abs() < 0.01);
+        assert!((arr[1] - 0.5).abs() < 0.01);
+        assert!((arr[2] - 0.0).abs() < 0.01);
+        assert!((arr[3] - 1.0).abs() < 0.01);
     }
 }

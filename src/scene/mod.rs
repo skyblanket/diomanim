@@ -157,6 +157,9 @@ impl SceneNode {
 #[derive(Debug, Clone)]
 pub enum Renderable {
     Circle { radius: f32, color: crate::core::Color },
+    Rectangle { width: f32, height: f32, color: crate::core::Color },
+    Line { start: Vector3, end: Vector3, color: crate::core::Color, thickness: f32 },
+    Arrow { start: Vector3, end: Vector3, color: crate::core::Color, thickness: f32 },
     // Future: Mesh, Sprite, etc.
 }
 
@@ -164,6 +167,28 @@ impl Renderable {
     pub fn as_circle(&self) -> Option<(&f32, &crate::core::Color)> {
         match self {
             Renderable::Circle { radius, color } => Some((radius, color)),
+            _ => None,
+        }
+    }
+    
+    pub fn as_rectangle(&self) -> Option<(&f32, &f32, &crate::core::Color)> {
+        match self {
+            Renderable::Rectangle { width, height, color } => Some((width, height, color)),
+            _ => None,
+        }
+    }
+    
+    pub fn as_line(&self) -> Option<(&Vector3, &Vector3, &crate::core::Color, &f32)> {
+        match self {
+            Renderable::Line { start, end, color, thickness } => Some((start, end, color, thickness)),
+            _ => None,
+        }
+    }
+    
+    pub fn as_arrow(&self) -> Option<(&Vector3, &Vector3, &crate::core::Color, &f32)> {
+        match self {
+            Renderable::Arrow { start, end, color, thickness } => Some((start, end, color, thickness)),
+            _ => None,
         }
     }
 }
