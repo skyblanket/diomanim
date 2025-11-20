@@ -617,4 +617,49 @@ impl ShapeRenderer {
     pub fn get_transform_bind_group(&self) -> &wgpu::BindGroup {
         &self.transform_bind_group
     }
+
+    pub fn draw_polygon(&self, vertices: &[Vector3], color: Color, render_pass: &mut wgpu::RenderPass) {
+        if vertices.len() < 3 {
+            return; // Need at least 3 vertices for a triangle
+        }
+
+        let color_array = color.to_f32_array();
+
+        // Create vertex buffer from polygon vertices
+        let gpu_vertices: Vec<Vertex> = vertices
+            .iter()
+            .map(|v| Vertex {
+                position: [v.x, v.y, v.z],
+                color: color_array,
+            })
+            .collect();
+
+        // Simple fan triangulation from first vertex
+        let mut indices = Vec::new();
+        for i in 1..(vertices.len() - 1) {
+            indices.push(0u16);
+            indices.push(i as u16);
+            indices.push((i + 1) as u16);
+        }
+
+        // Create GPU buffers
+        let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Polygon Vertex Buffer"),
+            contents: bytemuck::cast_slice(&gpu_vertices),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
+        let index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Polygon Index Buffer"),
+            contents: bytemuck::cast_slice(&indices),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+
+        // Set vertex and index buffers
+        render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+        render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+
+        // Draw
+        render_pass.draw_indexed(0..indices.len() as u32, 0, 0..1);
+    }
 }

@@ -191,3 +191,99 @@ impl Arrow {
         }
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct Polygon {
+    pub vertices: Vec<Vector3>,
+    pub color: Color,
+    pub closed: bool,
+}
+
+impl Polygon {
+    pub fn new(vertices: Vec<Vector3>, color: Color) -> Self {
+        Self {
+            vertices,
+            color,
+            closed: true,
+        }
+    }
+
+    /// Create a regular polygon (n-sided shape)
+    pub fn regular(sides: usize, radius: f32, color: Color) -> Self {
+        let mut vertices = Vec::new();
+        let angle_step = 2.0 * std::f32::consts::PI / sides as f32;
+
+        for i in 0..sides {
+            let angle = i as f32 * angle_step - std::f32::consts::PI / 2.0;
+            let x = radius * angle.cos();
+            let y = radius * angle.sin();
+            vertices.push(Vector3::new(x, y, 0.0));
+        }
+
+        Self::new(vertices, color)
+    }
+
+    /// Create a triangle
+    pub fn triangle(size: f32, color: Color) -> Self {
+        Self::regular(3, size, color)
+    }
+
+    /// Create a pentagon
+    pub fn pentagon(size: f32, color: Color) -> Self {
+        Self::regular(5, size, color)
+    }
+
+    /// Create a hexagon
+    pub fn hexagon(size: f32, color: Color) -> Self {
+        Self::regular(6, size, color)
+    }
+
+    /// Create a star shape
+    pub fn star(points: usize, outer_radius: f32, inner_radius: f32, color: Color) -> Self {
+        let mut vertices = Vec::new();
+        let angle_step = std::f32::consts::PI / points as f32;
+
+        for i in 0..(points * 2) {
+            let angle = i as f32 * angle_step - std::f32::consts::PI / 2.0;
+            let radius = if i % 2 == 0 { outer_radius } else { inner_radius };
+            let x = radius * angle.cos();
+            let y = radius * angle.sin();
+            vertices.push(Vector3::new(x, y, 0.0));
+        }
+
+        Self::new(vertices, color)
+    }
+
+    /// Simple ear clipping triangulation for rendering
+    pub fn triangulate(&self) -> Vec<u16> {
+        let mut indices = Vec::new();
+
+        if self.vertices.len() < 3 {
+            return indices;
+        }
+
+        // For simple convex polygons, fan triangulation from first vertex
+        for i in 1..(self.vertices.len() - 1) {
+            indices.push(0);
+            indices.push(i as u16);
+            indices.push((i + 1) as u16);
+        }
+
+        indices
+    }
+
+    /// Calculate the center/centroid of the polygon
+    pub fn center(&self) -> Vector3 {
+        if self.vertices.is_empty() {
+            return Vector3::zero();
+        }
+
+        let mut sum = Vector3::zero();
+        for vertex in &self.vertices {
+            sum = Vector3::new(sum.x + vertex.x, sum.y + vertex.y, sum.z + vertex.z);
+        }
+
+        let count = self.vertices.len() as f32;
+        Vector3::new(sum.x / count, sum.y / count, sum.z / count)
+    }
+}

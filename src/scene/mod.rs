@@ -160,6 +160,7 @@ pub enum Renderable {
     Rectangle { width: f32, height: f32, color: crate::core::Color },
     Line { start: Vector3, end: Vector3, color: crate::core::Color, thickness: f32 },
     Arrow { start: Vector3, end: Vector3, color: crate::core::Color, thickness: f32 },
+    Polygon { vertices: Vec<Vector3>, color: crate::core::Color },
     // Future: Mesh, Sprite, etc.
 }
 
@@ -188,6 +189,13 @@ impl Renderable {
     pub fn as_arrow(&self) -> Option<(&Vector3, &Vector3, &crate::core::Color, &f32)> {
         match self {
             Renderable::Arrow { start, end, color, thickness } => Some((start, end, color, thickness)),
+            _ => None,
+        }
+    }
+
+    pub fn as_polygon(&self) -> Option<(&Vec<Vector3>, &crate::core::Color)> {
+        match self {
+            Renderable::Polygon { vertices, color } => Some((vertices, color)),
             _ => None,
         }
     }

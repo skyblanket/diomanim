@@ -123,6 +123,8 @@ fn main() {
                     renderer.draw_line(*start, *end, *color, *thickness, &mut render_pass);
                 } else if let Some((start, end, color, thickness)) = renderable.as_arrow() {
                     renderer.draw_arrow(*start, *end, *color, *thickness, &mut render_pass);
+                } else if let Some((vertices, color)) = renderable.as_polygon() {
+                    renderer.draw_polygon(vertices, *color, &mut render_pass);
                 }
             }
             

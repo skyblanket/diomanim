@@ -36,6 +36,7 @@
 //! ```
 
 pub mod property;
+pub mod easing;
 
 use crate::core::TimeValue;
 use property::{AnimationClip, AnimationInstance};
