@@ -195,7 +195,7 @@ impl ShapeRenderer {
                 topology: wgpu::PrimitiveTopology::TriangleList,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
+                cull_mode: None,  // Disable back-face culling for debugging
                 polygon_mode: wgpu::PolygonMode::Fill,
                 unclipped_depth: false,
                 conservative: false,
@@ -345,26 +345,26 @@ impl ShapeRenderer {
     }
 
     pub fn draw_circle(&self, circle: &Circle, color: Color, render_pass: &mut wgpu::RenderPass) {
-        // Create vertices for a circle
+        // Create vertices for a circle centered at origin
+        // Position is handled by transform uniform
         let mut vertices = Vec::new();
         let segments = 32;
-        let center = circle.position;
         let radius = circle.radius;
 
         let color_array = color.to_f32_array();
 
-        // Create center vertex
+        // Create center vertex at origin
         vertices.push(Vertex {
-            position: [center.x, center.y, 0.0],
+            position: [0.0, 0.0, 0.0],
             color: color_array,
         });
 
-        // Create circle vertices
+        // Create circle vertices around origin
         for i in 0..=segments {
             let angle = 2.0 * std::f32::consts::PI * (i as f32) / (segments as f32);
-            let x = center.x + radius * angle.cos();
-            let y = center.y + radius * angle.sin();
-            
+            let x = radius * angle.cos();
+            let y = radius * angle.sin();
+
             vertices.push(Vertex {
                 position: [x, y, 0.0],
                 color: color_array,
@@ -372,11 +372,11 @@ impl ShapeRenderer {
         }
 
         // Create index buffer
-        let mut indices = Vec::new();
+        let mut indices: Vec<u16> = Vec::new();
         for i in 1..=segments {
-            indices.push(0);
-            indices.push(i);
-            indices.push(i + 1);
+            indices.push(0u16);
+            indices.push(i as u16);
+            indices.push((i + 1) as u16);
         }
 
         // Create GPU buffers
@@ -427,8 +427,8 @@ impl ShapeRenderer {
             },
         ];
 
-        // Create index buffer for two triangles
-        let indices = vec![0, 1, 2, 0, 2, 3];
+        // Create index buffer for two triangles (CCW winding)
+        let indices: Vec<u16> = vec![0, 1, 2, 0, 2, 3];
 
         // Create GPU buffers
         let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

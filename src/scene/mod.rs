@@ -135,19 +135,24 @@ impl SceneNode {
     
     /// Convert world transform to GPU-compatible matrix
     pub fn compute_model_matrix(&self) -> TransformUniform {
-        // This is a simplified 2D transform matrix
-        // In a full 3D implementation, this would compute a proper 4x4 matrix
-        
+        // Create a column-major 4x4 transformation matrix for WebGPU
+        // WebGPU/WGSL uses column-major matrices by default
+
         let pos = self.world_transform.position;
         let scale = self.world_transform.scale;
-        
-        // Create row-major transform matrix for 2D rendering
+
+        // Simple transform without rotation (2D)
+        // Column-major matrix: each array is a column
+        // | sx  0   0   tx |
+        // | 0   sy  0   ty |
+        // | 0   0   sz  tz |
+        // | 0   0   0   1  |
         TransformUniform {
             model_view_proj: [
-                [scale.x, 0.0, 0.0, pos.x],
-                [0.0, scale.y, 0.0, pos.y],
-                [0.0, 0.0, scale.z, pos.z],
-                [0.0, 0.0, 0.0, 1.0],
+                [scale.x, 0.0, 0.0, 0.0],  // Column 0: X axis
+                [0.0, scale.y, 0.0, 0.0],  // Column 1: Y axis
+                [0.0, 0.0, scale.z, 0.0],  // Column 2: Z axis
+                [pos.x, pos.y, pos.z, 1.0], // Column 3: Translation
             ],
         }
     }
