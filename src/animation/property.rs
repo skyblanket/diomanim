@@ -234,16 +234,22 @@ impl AnimationClip {
 pub trait AnyTrack: Send + Sync + std::fmt::Debug {
     fn duration(&self) -> TimeValue;
     fn sample_to_sample(&self, time: TimeValue, sample: &mut AnimationSample);
+    /// Get a reference to self as Any for downcasting
+    fn as_any(&self) -> &dyn Any;
 }
 
 impl<T: Animatable + std::fmt::Debug + 'static> AnyTrack for AnimationTrack<T> {
     fn duration(&self) -> TimeValue {
         self.duration()
     }
-    
+
     fn sample_to_sample(&self, _time: TimeValue, _sample: &mut AnimationSample) {
         // This would need a more sophisticated system for storing different types
         // For now, we'll skip type-erased sampling
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 

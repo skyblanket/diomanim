@@ -110,23 +110,28 @@ where
     render_pass.set_bind_group(0, renderer.get_transform_bind_group(), &[]);
 
     let renderables = scene.get_visible_renderables();
-    for (transform_uniform, renderable) in renderables {
+    for (transform_uniform, renderable, opacity) in renderables {
         renderer.update_transform(&transform_uniform);
+
+        // Apply opacity to color
+        let apply_opacity = |color: diomanim::core::Color| -> diomanim::core::Color {
+            diomanim::core::Color::rgba(color.r, color.g, color.b, color.a * opacity)
+        };
 
         match renderable {
             Renderable::Circle { radius, color } => {
                 let circle = diomanim::mobjects::Circle {
                     radius,
-                    color,
+                    color: apply_opacity(color),
                     position: Vector3::zero(),
                 };
-                renderer.draw_circle(&circle, color, &mut render_pass);
+                renderer.draw_circle(&circle, apply_opacity(color), &mut render_pass);
             }
             Renderable::Rectangle { width, height, color } => {
-                renderer.draw_rectangle(width, height, color, &mut render_pass);
+                renderer.draw_rectangle(width, height, apply_opacity(color), &mut render_pass);
             }
             Renderable::Polygon { vertices, color } => {
-                renderer.draw_polygon(&vertices, color, &mut render_pass);
+                renderer.draw_polygon(&vertices, apply_opacity(color), &mut render_pass);
             }
             _ => {}
         }

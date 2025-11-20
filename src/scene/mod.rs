@@ -68,6 +68,8 @@ pub struct SceneNode {
     pub children: Vec<NodeId>,
     /// Whether this node is visible
     pub visible: bool,
+    /// Opacity (0.0 = fully transparent, 1.0 = fully opaque)
+    pub opacity: f32,
     /// Attached renderable object
     pub renderable: Option<Renderable>,
     /// Active animations on this node
@@ -84,6 +86,7 @@ impl SceneNode {
             parent: None,
             children: Vec::new(),
             visible: true,
+            opacity: 1.0,
             renderable: None,
             animations: Vec::new(),
         }
@@ -98,6 +101,7 @@ impl SceneNode {
             parent: None,
             children: Vec::new(),
             visible: true,
+            opacity: 1.0,
             renderable: None,
             animations: Vec::new(),
         }
@@ -116,20 +120,61 @@ impl SceneNode {
     /// Update animations and return true if the transform was modified
     pub fn update_animations(&mut self, delta_time: TimeValue) -> bool {
         let mut transform_changed = false;
-        
+
         for anim in &mut self.animations {
             if anim.is_playing {
-                if let Some(_sample) = anim.update(delta_time) {
-                    // This is simplified - in a real implementation, we'd apply
-                    // the animation sample to the node's transform
-                    transform_changed = true;
+                // Update animation time
+                let local_time = anim.current_time;
+                let duration = anim.clip.duration();
+                let new_time = local_time + delta_time;
+
+                if duration > TimeValue::new(0.0) {
+                    if anim.clip.loop_animation {
+                        let loop_time = (new_time % duration).seconds();
+                        anim.current_time = TimeValue::new(loop_time);
+                    } else if new_time >= duration {
+                        anim.is_playing = false;
+                        anim.current_time = duration;
+                    } else {
+                        anim.current_time = new_time;
+                    }
+                } else {
+                    anim.current_time = new_time;
+                }
+
+                // Sample each track at current time
+                for track_box in &anim.clip.tracks {
+                    // Downcast to concrete AnimationTrack<Vector3>
+                    if let Some(track) = track_box.as_any().downcast_ref::<crate::animation::property::AnimationTrack<Vector3>>() {
+                        let sample = track.sample(anim.current_time);
+
+                        match track.name.as_str() {
+                            "position" => {
+                                self.world_transform.position = sample;
+                                transform_changed = true;
+                            }
+                            "rotation" => {
+                                // For now, we only use Z rotation (2D)
+                                self.world_transform.rotation.z = sample.z;
+                                transform_changed = true;
+                            }
+                            "scale" => {
+                                self.world_transform.scale = sample;
+                                transform_changed = true;
+                            }
+                            "opacity" => {
+                                self.opacity = sample.x.clamp(0.0, 1.0);
+                            }
+                            _ => {}
+                        }
+                    }
                 }
             }
         }
-        
-        // Remove finished animations
-        self.animations.retain(|anim| anim.is_playing || (anim.clip.loop_animation && anim.is_playing));
-        
+
+        // Remove finished non-looping animations
+        self.animations.retain(|anim| anim.is_playing || anim.clip.loop_animation);
+
         transform_changed
     }
     
@@ -379,25 +424,25 @@ impl SceneGraph {
         }
     }
     
-    /// Get all visible renderable objects with their transforms
-    pub fn get_visible_renderables(&self) -> Vec<(TransformUniform, Renderable)> {
+    /// Get all visible renderable objects with their transforms and opacity
+    pub fn get_visible_renderables(&self) -> Vec<(TransformUniform, Renderable, f32)> {
         let mut renderables = Vec::new();
-        
+
         for &root_id in &self.root_nodes {
             self.gather_renderables_recursive(root_id, &mut renderables);
         }
-        
+
         renderables
     }
-    
-    /// Recursively gather renderables
-    fn gather_renderables_recursive(&self, node_id: NodeId, renderables: &mut Vec<(TransformUniform, Renderable)>) {
+
+    /// Recursively gather renderables with opacity
+    fn gather_renderables_recursive(&self, node_id: NodeId, renderables: &mut Vec<(TransformUniform, Renderable, f32)>) {
         if let Some(node) = self.nodes.get(&node_id) {
-            if node.visible {
+            if node.visible && node.opacity > 0.0 {
                 if let Some(renderable) = &node.renderable {
-                    renderables.push((node.compute_model_matrix(), renderable.clone()));
+                    renderables.push((node.compute_model_matrix(), renderable.clone(), node.opacity));
                 }
-                
+
                 for &child_id in &node.children {
                     self.gather_renderables_recursive(child_id, renderables);
                 }

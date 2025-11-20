@@ -37,12 +37,14 @@
 
 pub mod property;
 pub mod easing;
+pub mod effects;
 
 use crate::core::TimeValue;
 use property::{AnimationClip, AnimationInstance};
 
 // Re-export key types
 pub use property::{Keyframe, AnimationTrack, InterpolationType, AnimationSample};
+pub use effects::*;
 
 // Timer for animation control
 pub struct Timer {

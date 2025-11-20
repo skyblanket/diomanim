@@ -214,29 +214,34 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Render all visible objects
         let renderables = scene.get_visible_renderables();
-        for (transform_uniform, renderable) in renderables {
+        for (transform_uniform, renderable, opacity) in renderables {
             renderer.update_transform(&transform_uniform);
+
+            // Apply opacity to color
+            let apply_opacity = |color: Color| -> Color {
+                Color::rgba(color.r, color.g, color.b, color.a * opacity)
+            };
 
             match renderable {
                 Renderable::Circle { radius, color } => {
                     let circle = diomanim::mobjects::Circle {
                         radius,
-                        color,
+                        color: apply_opacity(color),
                         position: Vector3::zero(),
                     };
-                    renderer.draw_circle(&circle, color, &mut render_pass);
+                    renderer.draw_circle(&circle, apply_opacity(color), &mut render_pass);
                 }
                 Renderable::Rectangle { width, height, color } => {
-                    renderer.draw_rectangle(width, height, color, &mut render_pass);
+                    renderer.draw_rectangle(width, height, apply_opacity(color), &mut render_pass);
                 }
                 Renderable::Line { start, end, color, thickness } => {
-                    renderer.draw_line(start, end, color, thickness, &mut render_pass);
+                    renderer.draw_line(start, end, apply_opacity(color), thickness, &mut render_pass);
                 }
                 Renderable::Arrow { start, end, color, thickness } => {
-                    renderer.draw_arrow(start, end, color, thickness, &mut render_pass);
+                    renderer.draw_arrow(start, end, apply_opacity(color), thickness, &mut render_pass);
                 }
                 Renderable::Polygon { vertices, color } => {
-                    renderer.draw_polygon(&vertices, color, &mut render_pass);
+                    renderer.draw_polygon(&vertices, apply_opacity(color), &mut render_pass);
                 }
             }
         }
