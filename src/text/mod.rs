@@ -5,6 +5,7 @@
 //!
 //! ## Features
 //! - TrueType font loading
+//! - Glyph rasterization with texture atlas
 //! - Basic text rendering with color and size
 //! - Text positioning and alignment
 //! - Future: LaTeX support
@@ -18,9 +19,11 @@
 //! ```
 
 pub mod font;
+pub mod rasterizer;
 
 use crate::core::{Color, Vector3};
 pub use font::{Font, SystemFonts};
+pub use rasterizer::{GlyphAtlas, RasterizedGlyph};
 
 /// Text mobject for rendering text in animations
 #[derive(Clone)]
