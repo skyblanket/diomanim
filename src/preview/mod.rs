@@ -134,7 +134,7 @@ impl PreviewApp {
 
     /// Render the current frame
     fn render(&mut self) {
-        let Some(renderer) = &self.renderer else {
+        let Some(renderer) = &mut self.renderer else {
             return;
         };
         let Some(surface) = &self.surface else { return };
@@ -324,9 +324,14 @@ impl ApplicationHandler for PreviewApp {
         // Initialize renderer and surface (async operation)
         let (renderer, surface, surface_config) = pollster::block_on(async {
             // Create renderer
-            let renderer = ShapeRenderer::new(self.width, self.height)
+            let mut renderer = ShapeRenderer::new(self.width, self.height)
                 .await
                 .expect("Failed to create renderer");
+
+            // Initialize text rendering
+            renderer
+                .init_text_rendering(48.0)
+                .expect("Failed to initialize text rendering");
 
             // Create surface
             let surface = renderer

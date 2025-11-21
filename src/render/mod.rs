@@ -40,12 +40,23 @@
 
 use crate::core::{Color, Vector3};
 use crate::mobjects::Circle;
+use crate::text::GlyphAtlas;
 use wgpu::util::DeviceExt;
+use std::sync::{Arc, Mutex};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
     pub position: [f32; 3],
+    pub color: [f32; 4],
+}
+
+// Text vertex with UV coordinates for texture sampling
+#[repr(C)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct TextVertex {
+    pub position: [f32; 3],
+    pub uv: [f32; 2],
     pub color: [f32; 4],
 }
 
@@ -80,6 +91,11 @@ pub struct ShapeRenderer {
     pipeline: wgpu::RenderPipeline,
     transform_bind_group: wgpu::BindGroup,
     transform_buffer: wgpu::Buffer,
+    // Text rendering components
+    text_pipeline: Option<wgpu::RenderPipeline>,
+    text_atlas: Option<Arc<Mutex<GlyphAtlas>>>,
+    text_texture: Option<wgpu::Texture>,
+    text_bind_group: Option<wgpu::BindGroup>,
 }
 
 impl ShapeRenderer {
@@ -220,6 +236,10 @@ impl ShapeRenderer {
             pipeline,
             transform_bind_group,
             transform_buffer,
+            text_pipeline: None,
+            text_atlas: None,
+            text_texture: None,
+            text_bind_group: None,
         })
     }
 
@@ -680,6 +700,182 @@ impl ShapeRenderer {
         &self.transform_bind_group
     }
 
+    /// Initialize text rendering system
+    pub fn init_text_rendering(&mut self, font_size: f32) -> Result<(), Box<dyn std::error::Error>> {
+        // Create glyph atlas
+        let atlas = Arc::new(Mutex::new(GlyphAtlas::from_system_font(font_size)?));
+
+        // Get atlas dimensions and data
+        let (atlas_width, atlas_height) = {
+            let atlas_guard = atlas.lock().unwrap();
+            atlas_guard.atlas_dimensions()
+        };
+
+        // Create texture for glyph atlas
+        let texture = self.device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("Glyph Atlas Texture"),
+            size: wgpu::Extent3d {
+                width: atlas_width,
+                height: atlas_height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[],
+        });
+
+        // Create texture view and sampler
+        let texture_view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let sampler = self.device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("Glyph Atlas Sampler"),
+            address_mode_u: wgpu::AddressMode::ClampToEdge,
+            address_mode_v: wgpu::AddressMode::ClampToEdge,
+            address_mode_w: wgpu::AddressMode::ClampToEdge,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Nearest,
+            ..Default::default()
+        });
+
+        // Create bind group layout for text
+        let text_bind_group_layout =
+            self.device
+                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    label: Some("Text Bind Group Layout"),
+                    entries: &[
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 0,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
+                            ty: wgpu::BindingType::Texture {
+                                sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                                view_dimension: wgpu::TextureViewDimension::D2,
+                                multisampled: false,
+                            },
+                            count: None,
+                        },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 1,
+                            visibility: wgpu::ShaderStages::FRAGMENT,
+                            ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                            count: None,
+                        },
+                    ],
+                });
+
+        // Create bind group
+        let text_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("Text Bind Group"),
+            layout: &text_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&texture_view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(&sampler),
+                },
+            ],
+        });
+
+        // Load text shader
+        let text_shader = self
+            .device
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
+                label: Some("Text Shader"),
+                source: wgpu::ShaderSource::Wgsl(include_str!("text.wgsl").into()),
+            });
+
+        // Get transform bind group layout from existing pipeline
+        let transform_bind_group_layout = self
+            .pipeline
+            .get_bind_group_layout(0);
+
+        // Create text pipeline layout
+        let text_pipeline_layout =
+            self.device
+                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                    label: Some("Text Pipeline Layout"),
+                    bind_group_layouts: &[&transform_bind_group_layout, &text_bind_group_layout],
+                    push_constant_ranges: &[],
+                });
+
+        // Create text rendering pipeline
+        let text_pipeline = self
+            .device
+            .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                label: Some("Text Render Pipeline"),
+                layout: Some(&text_pipeline_layout),
+                vertex: wgpu::VertexState {
+                    module: &text_shader,
+                    entry_point: Some("vs_main"),
+                    buffers: &[wgpu::VertexBufferLayout {
+                        array_stride: std::mem::size_of::<TextVertex>() as wgpu::BufferAddress,
+                        step_mode: wgpu::VertexStepMode::Vertex,
+                        attributes: &[
+                            // position
+                            wgpu::VertexAttribute {
+                                offset: 0,
+                                shader_location: 0,
+                                format: wgpu::VertexFormat::Float32x3,
+                            },
+                            // uv
+                            wgpu::VertexAttribute {
+                                offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
+                                shader_location: 1,
+                                format: wgpu::VertexFormat::Float32x2,
+                            },
+                            // color
+                            wgpu::VertexAttribute {
+                                offset: std::mem::size_of::<[f32; 5]>() as wgpu::BufferAddress,
+                                shader_location: 2,
+                                format: wgpu::VertexFormat::Float32x4,
+                            },
+                        ],
+                    }],
+                    compilation_options: wgpu::PipelineCompilationOptions::default(),
+                },
+                fragment: Some(wgpu::FragmentState {
+                    module: &text_shader,
+                    entry_point: Some("fs_main"),
+                    targets: &[Some(wgpu::ColorTargetState {
+                        format: wgpu::TextureFormat::Rgba8Unorm,
+                        blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                        write_mask: wgpu::ColorWrites::ALL,
+                    })],
+                    compilation_options: wgpu::PipelineCompilationOptions::default(),
+                }),
+                primitive: wgpu::PrimitiveState {
+                    topology: wgpu::PrimitiveTopology::TriangleList,
+                    strip_index_format: None,
+                    front_face: wgpu::FrontFace::Ccw,
+                    cull_mode: None,
+                    polygon_mode: wgpu::PolygonMode::Fill,
+                    unclipped_depth: false,
+                    conservative: false,
+                },
+                depth_stencil: None,
+                multisample: wgpu::MultisampleState {
+                    count: 1,
+                    mask: !0,
+                    alpha_to_coverage_enabled: false,
+                },
+                multiview: None,
+                cache: None,
+            });
+
+        // Store everything
+        self.text_pipeline = Some(text_pipeline);
+        self.text_atlas = Some(atlas);
+        self.text_texture = Some(texture);
+        self.text_bind_group = Some(text_bind_group);
+
+        Ok(())
+    }
+
     pub fn get_instance(&self) -> &wgpu::Instance {
         &self.instance
     }
@@ -738,22 +934,151 @@ impl ShapeRenderer {
         render_pass.draw_indexed(0..indices.len() as u32, 0, 0..1);
     }
 
-    /// Draw text (MVP: renders as colored rectangle placeholder)
-    /// TODO: Implement proper glyph rasterization
+    /// Draw text using glyph atlas
     pub fn draw_text(
-        &self,
+        &mut self,
         content: &str,
         font_size: f32,
         color: Color,
         render_pass: &mut wgpu::RenderPass,
     ) {
-        // For MVP, render as a colored rectangle placeholder
-        // Width approximation: 0.6 * font_size per character
-        let char_width = 0.6 * font_size / 1000.0; // Normalize to screen space
-        let width = char_width * content.len() as f32;
-        let height = font_size / 1000.0; // Normalize to screen space
+        // Check if text rendering is initialized
+        let (text_pipeline, text_atlas, text_bind_group) = match (
+            &self.text_pipeline,
+            &self.text_atlas,
+            &self.text_bind_group,
+        ) {
+            (Some(pipeline), Some(atlas), Some(bind_group)) => (pipeline, atlas, bind_group),
+            _ => {
+                // Fallback to rectangle if not initialized
+                let char_width = 0.6 * font_size / 1000.0;
+                let width = char_width * content.len() as f32;
+                let height = font_size / 1000.0;
+                self.draw_rectangle(width, height, color, render_pass);
+                return;
+            }
+        };
 
-        // Render as rectangle
-        self.draw_rectangle(width, height, color, render_pass);
+        // Lock atlas and rasterize all glyphs
+        let mut atlas_guard = text_atlas.lock().unwrap();
+        if let Err(e) = atlas_guard.rasterize_string(content) {
+            eprintln!("Failed to rasterize text: {}", e);
+            return;
+        }
+
+        // Update texture with atlas data
+        if let Some(texture) = &self.text_texture {
+            let (atlas_width, atlas_height) = atlas_guard.atlas_dimensions();
+            self.queue.write_texture(
+                wgpu::TexelCopyTextureInfo {
+                    texture,
+                    mip_level: 0,
+                    origin: wgpu::Origin3d::ZERO,
+                    aspect: wgpu::TextureAspect::All,
+                },
+                atlas_guard.atlas_data(),
+                wgpu::TexelCopyBufferLayout {
+                    offset: 0,
+                    bytes_per_row: Some(atlas_width * 4),
+                    rows_per_image: Some(atlas_height),
+                },
+                wgpu::Extent3d {
+                    width: atlas_width,
+                    height: atlas_height,
+                    depth_or_array_layers: 1,
+                },
+            );
+        }
+
+        // Build vertices for each glyph
+        let mut vertices = Vec::new();
+        let mut indices = Vec::new();
+        let mut cursor_x = 0.0f32;
+        let color_array = color.to_f32_array();
+
+        let scale = font_size / 1000.0; // Normalize to screen space
+
+        for c in content.chars() {
+            if let Some(glyph) = atlas_guard.get_glyph(c) {
+                if glyph.width > 0 && glyph.height > 0 {
+                    let glyph_width = glyph.width as f32 * scale;
+                    let glyph_height = glyph.height as f32 * scale;
+                    let bearing_x = glyph.bearing_x * scale;
+                    let bearing_y = glyph.bearing_y * scale;
+
+                    let x0 = cursor_x + bearing_x;
+                    let y0 = -bearing_y;
+                    let x1 = x0 + glyph_width;
+                    let y1 = y0 + glyph_height;
+
+                    let base_idx = vertices.len() as u16;
+
+                    // Create quad for this glyph
+                    vertices.push(TextVertex {
+                        position: [x0, y0, 0.0],
+                        uv: [glyph.uv.0, glyph.uv.1],
+                        color: color_array,
+                    });
+                    vertices.push(TextVertex {
+                        position: [x1, y0, 0.0],
+                        uv: [glyph.uv.2, glyph.uv.1],
+                        color: color_array,
+                    });
+                    vertices.push(TextVertex {
+                        position: [x1, y1, 0.0],
+                        uv: [glyph.uv.2, glyph.uv.3],
+                        color: color_array,
+                    });
+                    vertices.push(TextVertex {
+                        position: [x0, y1, 0.0],
+                        uv: [glyph.uv.0, glyph.uv.3],
+                        color: color_array,
+                    });
+
+                    // Two triangles for the quad
+                    indices.extend_from_slice(&[
+                        base_idx,
+                        base_idx + 1,
+                        base_idx + 2,
+                        base_idx,
+                        base_idx + 2,
+                        base_idx + 3,
+                    ]);
+                }
+
+                cursor_x += glyph.advance * scale;
+            }
+        }
+
+        drop(atlas_guard);
+
+        if vertices.is_empty() {
+            return;
+        }
+
+        // Create GPU buffers
+        let vertex_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Text Vertex Buffer"),
+                contents: bytemuck::cast_slice(&vertices),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+
+        let index_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Text Index Buffer"),
+                contents: bytemuck::cast_slice(&indices),
+                usage: wgpu::BufferUsages::INDEX,
+            });
+
+        // Render text
+        render_pass.set_pipeline(text_pipeline);
+        render_pass.set_bind_group(0, &self.transform_bind_group, &[]);
+        render_pass.set_bind_group(1, text_bind_group, &[]);
+        render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+        render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+        render_pass.draw_indexed(0..indices.len() as u32, 0, 0..1);
     }
 }

@@ -1,7 +1,6 @@
 //! Text Rendering Demo
 //!
-//! Demonstrates Phase 3 text rendering with animations.
-//! Note: This is MVP with placeholder rendering - proper glyph rasterization coming soon!
+//! Demonstrates Phase 3 text rendering with GPU-accelerated glyph rasterization.
 
 use diomanim::core::*;
 use diomanim::preview::run_preview;
@@ -9,10 +8,9 @@ use diomanim::scene::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("╔═══════════════════════════════════════════════════════════════╗");
-    println!("║  Diomanim - Text Rendering Demo (Phase 3 MVP)                ║");
+    println!("║  Diomanim - Text Rendering Demo (Phase 3 Complete!)          ║");
     println!("╚═══════════════════════════════════════════════════════════════╝\n");
-    println!("Note: Text currently renders as colored rectangles (placeholder)");
-    println!("Full glyph rasterization coming in next iteration!\n");
+    println!("✨ GPU-accelerated text rendering with real glyph rasterization!\n");
 
     let mut scene = SceneGraph::new();
 

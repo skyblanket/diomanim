@@ -27,7 +27,7 @@ fn main() {
     let runtime = tokio::runtime::Runtime::new().unwrap();
     runtime.block_on(async {
         println!("Initializing GPU renderer...");
-        let renderer = ShapeRenderer::new(WIDTH, HEIGHT)
+        let mut renderer = ShapeRenderer::new(WIDTH, HEIGHT)
             .await
             .expect("Failed to create renderer");
         println!("✓ WebGPU renderer ready ({}x{})", WIDTH, HEIGHT);
