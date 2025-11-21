@@ -240,6 +240,11 @@ pub enum Renderable {
         vertices: Vec<Vector3>,
         color: crate::core::Color,
     },
+    Text {
+        content: String,
+        font_size: f32,
+        color: crate::core::Color,
+    },
     // Future: Mesh, Sprite, etc.
 }
 
@@ -289,6 +294,17 @@ impl Renderable {
     pub fn as_polygon(&self) -> Option<(&Vec<Vector3>, &crate::core::Color)> {
         match self {
             Renderable::Polygon { vertices, color } => Some((vertices, color)),
+            _ => None,
+        }
+    }
+
+    pub fn as_text(&self) -> Option<(&String, &f32, &crate::core::Color)> {
+        match self {
+            Renderable::Text {
+                content,
+                font_size,
+                color,
+            } => Some((content, font_size, color)),
             _ => None,
         }
     }

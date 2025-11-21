@@ -385,4 +385,23 @@ impl SceneGraph {
             .collect();
         self.add_polygon(name, vertices, color)
     }
+
+    /// Create text with fluent API
+    pub fn add_text(
+        &mut self,
+        name: impl Into<String>,
+        content: impl Into<String>,
+        font_size: f32,
+        color: Color,
+    ) -> NodeBuilder {
+        let node_id = self.create_node(name.into());
+        self.get_node_mut(node_id)
+            .unwrap()
+            .set_renderable(Renderable::Text {
+                content: content.into(),
+                font_size,
+                color,
+            });
+        NodeBuilder::new(self, node_id)
+    }
 }

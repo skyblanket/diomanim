@@ -217,6 +217,8 @@ impl PreviewApp {
                 );
             } else if let Some((vertices, color)) = renderable.as_polygon() {
                 renderer.draw_polygon(vertices, apply_opacity(*color), &mut render_pass);
+            } else if let Some((content, font_size, color)) = renderable.as_text() {
+                renderer.draw_text(content, *font_size, apply_opacity(*color), &mut render_pass);
             }
         }
 

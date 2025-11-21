@@ -737,4 +737,23 @@ impl ShapeRenderer {
         // Draw
         render_pass.draw_indexed(0..indices.len() as u32, 0, 0..1);
     }
+
+    /// Draw text (MVP: renders as colored rectangle placeholder)
+    /// TODO: Implement proper glyph rasterization
+    pub fn draw_text(
+        &self,
+        content: &str,
+        font_size: f32,
+        color: Color,
+        render_pass: &mut wgpu::RenderPass,
+    ) {
+        // For MVP, render as a colored rectangle placeholder
+        // Width approximation: 0.6 * font_size per character
+        let char_width = 0.6 * font_size / 1000.0; // Normalize to screen space
+        let width = char_width * content.len() as f32;
+        let height = font_size / 1000.0; // Normalize to screen space
+
+        // Render as rectangle
+        self.draw_rectangle(width, height, color, render_pass);
+    }
 }
