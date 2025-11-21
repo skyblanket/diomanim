@@ -150,16 +150,16 @@ impl SceneNode {
 
                         match track.name.as_str() {
                             "position" => {
-                                self.world_transform.position = sample;
+                                self._local_transform.position = sample;
                                 transform_changed = true;
                             }
                             "rotation" => {
                                 // For now, we only use Z rotation (2D)
-                                self.world_transform.rotation.z = sample.z;
+                                self._local_transform.rotation.z = sample.z;
                                 transform_changed = true;
                             }
                             "scale" => {
-                                self.world_transform.scale = sample;
+                                self._local_transform.scale = sample;
                                 transform_changed = true;
                             }
                             "opacity" => {

@@ -42,8 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         color: Color::RED,
     });
 
-    // Start with opacity 0, fade in over DURATION seconds
-    scene.get_node_mut(circle1_id).unwrap().opacity = 0.0;
+    // Animation will start with opacity 0, fade in over DURATION seconds
     let fade_in_anim = effects::fade_in(DURATION);
     scene.get_node_mut(circle1_id).unwrap()
         .add_animation(AnimationInstance::new(fade_in_anim, TimeValue::new(0.0)));
@@ -79,12 +78,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         color: Color::BLUE,
     });
 
-    // Start with opacity 0 and scale 0, grow and fade in together
-    scene.get_node_mut(circle3_id).unwrap().opacity = 0.0;
-    scene.get_node_mut(circle3_id).unwrap().world_transform.scale = Vector3::zero();
+    // Animation will start with opacity 0 and scale 0, grow and fade in together
     let create_anim = effects::create(DURATION);
     scene.get_node_mut(circle3_id).unwrap()
         .add_animation(AnimationInstance::new(create_anim, TimeValue::new(0.0)));
+
+    // Initialize all animations by sampling at t=0
+    scene.update_animations(TimeValue::new(0.0));
+    scene.update_transforms();
 
     println!("✓ Created scene with {} animated objects", scene.get_visible_renderables().len());
 
