@@ -70,7 +70,7 @@ Real-world benchmarks on 1920x1080 resolution with 10 objects:
 
 ### Quick Start
 ```bash
-git clone https://github.com/YOUR_USERNAME/diomanim.git
+git clone https://github.com/skyblanket/diomanim.git
 cd diomanim
 cargo build --release
 ```
@@ -376,7 +376,7 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 ### Development Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/diomanim.git
+git clone https://github.com/skyblanket/diomanim.git
 cd diomanim
 git checkout -b feature/my-feature
 
@@ -405,8 +405,8 @@ You are free to:
 
 ## 📞 Support
 
-- **Issues:** [GitHub Issues](https://github.com/YOUR_USERNAME/diomanim/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/YOUR_USERNAME/diomanim/discussions)
+- **Issues:** [GitHub Issues](https://github.com/skyblanket/diomanim/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/skyblanket/diomanim/discussions)
 
 ---
 
@@ -435,7 +435,7 @@ You are free to:
 ## 🚀 Get Started
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/diomanim.git
+git clone https://github.com/skyblanket/diomanim.git
 cd diomanim
 cargo run --release --example showcase
 ```
