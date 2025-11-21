@@ -50,6 +50,7 @@
 pub mod animation;
 pub mod core;
 pub mod export;
+pub mod math;
 pub mod mobjects;
 pub mod preview;
 pub mod render;

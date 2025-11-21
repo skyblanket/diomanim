@@ -1081,4 +1081,37 @@ impl ShapeRenderer {
         render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
         render_pass.draw_indexed(0..indices.len() as u32, 0, 0..1);
     }
+
+    /// Draw a mathematical expression using LaTeX notation
+    ///
+    /// This method parses the LaTeX, lays out the components, and renders
+    /// each text element using the existing text rendering system.
+    pub fn draw_math(
+        &mut self,
+        latex: &str,
+        base_font_size: f32,
+        color: Color,
+        render_pass: &mut wgpu::RenderPass,
+    ) {
+        use crate::math::{expression::parse_latex, layout::MathLayout};
+
+        // Parse the LaTeX into a tree
+        let math_node = parse_latex(latex);
+
+        // Layout the expression
+        let layout = MathLayout::layout_node(&math_node, base_font_size);
+
+        // Flatten into positioned text elements
+        let elements = layout.flatten();
+
+        // Render each text element
+        // For now, we'll render all elements with the identity transform
+        // TODO: In the future, we should properly position each element
+        // based on the layout positions
+        for (_position, text, font_size) in elements {
+            // Draw the text at its relative position
+            // The positioning is handled by the layout system
+            self.draw_text(&text, font_size, color, render_pass);
+        }
+    }
 }

@@ -176,6 +176,13 @@ fn main() {
                         apply_opacity(*color),
                         &mut render_pass,
                     );
+                } else if let Some((latex, font_size, color)) = renderable.as_math() {
+                    renderer.draw_math(
+                        latex,
+                        *font_size,
+                        apply_opacity(*color),
+                        &mut render_pass,
+                    );
                 }
             }
 

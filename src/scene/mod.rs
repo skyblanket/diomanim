@@ -245,6 +245,11 @@ pub enum Renderable {
         font_size: f32,
         color: crate::core::Color,
     },
+    Math {
+        latex: String,
+        font_size: f32,
+        color: crate::core::Color,
+    },
     // Future: Mesh, Sprite, etc.
 }
 
@@ -305,6 +310,17 @@ impl Renderable {
                 font_size,
                 color,
             } => Some((content, font_size, color)),
+            _ => None,
+        }
+    }
+
+    pub fn as_math(&self) -> Option<(&String, &f32, &crate::core::Color)> {
+        match self {
+            Renderable::Math {
+                latex,
+                font_size,
+                color,
+            } => Some((latex, font_size, color)),
             _ => None,
         }
     }
