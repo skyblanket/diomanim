@@ -195,7 +195,7 @@ impl ShapeRenderer {
                 topology: wgpu::PrimitiveTopology::TriangleList,
                 strip_index_format: None,
                 front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),
+                cull_mode: None,  // Disable back-face culling for debugging
                 polygon_mode: wgpu::PolygonMode::Fill,
                 unclipped_depth: false,
                 conservative: false,
@@ -345,26 +345,26 @@ impl ShapeRenderer {
     }
 
     pub fn draw_circle(&self, circle: &Circle, color: Color, render_pass: &mut wgpu::RenderPass) {
-        // Create vertices for a circle
+        // Create vertices for a circle centered at origin
+        // Position is handled by transform uniform
         let mut vertices = Vec::new();
         let segments = 32;
-        let center = circle.position;
         let radius = circle.radius;
 
         let color_array = color.to_f32_array();
 
-        // Create center vertex
+        // Create center vertex at origin
         vertices.push(Vertex {
-            position: [center.x, center.y, 0.0],
+            position: [0.0, 0.0, 0.0],
             color: color_array,
         });
 
-        // Create circle vertices
+        // Create circle vertices around origin
         for i in 0..=segments {
             let angle = 2.0 * std::f32::consts::PI * (i as f32) / (segments as f32);
-            let x = center.x + radius * angle.cos();
-            let y = center.y + radius * angle.sin();
-            
+            let x = radius * angle.cos();
+            let y = radius * angle.sin();
+
             vertices.push(Vertex {
                 position: [x, y, 0.0],
                 color: color_array,
@@ -372,11 +372,11 @@ impl ShapeRenderer {
         }
 
         // Create index buffer
-        let mut indices = Vec::new();
+        let mut indices: Vec<u16> = Vec::new();
         for i in 1..=segments {
-            indices.push(0);
-            indices.push(i);
-            indices.push(i + 1);
+            indices.push(0u16);
+            indices.push(i as u16);
+            indices.push((i + 1) as u16);
         }
 
         // Create GPU buffers
@@ -427,8 +427,8 @@ impl ShapeRenderer {
             },
         ];
 
-        // Create index buffer for two triangles
-        let indices = vec![0, 1, 2, 0, 2, 3];
+        // Create index buffer for two triangles (CCW winding)
+        let indices: Vec<u16> = vec![0, 1, 2, 0, 2, 3];
 
         // Create GPU buffers
         let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -616,5 +616,50 @@ impl ShapeRenderer {
 
     pub fn get_transform_bind_group(&self) -> &wgpu::BindGroup {
         &self.transform_bind_group
+    }
+
+    pub fn draw_polygon(&self, vertices: &[Vector3], color: Color, render_pass: &mut wgpu::RenderPass) {
+        if vertices.len() < 3 {
+            return; // Need at least 3 vertices for a triangle
+        }
+
+        let color_array = color.to_f32_array();
+
+        // Create vertex buffer from polygon vertices
+        let gpu_vertices: Vec<Vertex> = vertices
+            .iter()
+            .map(|v| Vertex {
+                position: [v.x, v.y, v.z],
+                color: color_array,
+            })
+            .collect();
+
+        // Simple fan triangulation from first vertex
+        let mut indices = Vec::new();
+        for i in 1..(vertices.len() - 1) {
+            indices.push(0u16);
+            indices.push(i as u16);
+            indices.push((i + 1) as u16);
+        }
+
+        // Create GPU buffers
+        let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Polygon Vertex Buffer"),
+            contents: bytemuck::cast_slice(&gpu_vertices),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
+        let index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Polygon Index Buffer"),
+            contents: bytemuck::cast_slice(&indices),
+            usage: wgpu::BufferUsages::INDEX,
+        });
+
+        // Set vertex and index buffers
+        render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+        render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+
+        // Draw
+        render_pass.draw_indexed(0..indices.len() as u32, 0, 0..1);
     }
 }

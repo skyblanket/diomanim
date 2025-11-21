@@ -68,6 +68,8 @@ pub struct SceneNode {
     pub children: Vec<NodeId>,
     /// Whether this node is visible
     pub visible: bool,
+    /// Opacity (0.0 = fully transparent, 1.0 = fully opaque)
+    pub opacity: f32,
     /// Attached renderable object
     pub renderable: Option<Renderable>,
     /// Active animations on this node
@@ -84,6 +86,7 @@ impl SceneNode {
             parent: None,
             children: Vec::new(),
             visible: true,
+            opacity: 1.0,
             renderable: None,
             animations: Vec::new(),
         }
@@ -98,6 +101,7 @@ impl SceneNode {
             parent: None,
             children: Vec::new(),
             visible: true,
+            opacity: 1.0,
             renderable: None,
             animations: Vec::new(),
         }
@@ -116,38 +120,84 @@ impl SceneNode {
     /// Update animations and return true if the transform was modified
     pub fn update_animations(&mut self, delta_time: TimeValue) -> bool {
         let mut transform_changed = false;
-        
+
         for anim in &mut self.animations {
             if anim.is_playing {
-                if let Some(_sample) = anim.update(delta_time) {
-                    // This is simplified - in a real implementation, we'd apply
-                    // the animation sample to the node's transform
-                    transform_changed = true;
+                // Update animation time
+                let local_time = anim.current_time;
+                let duration = anim.clip.duration();
+                let new_time = local_time + delta_time;
+
+                if duration > TimeValue::new(0.0) {
+                    if anim.clip.loop_animation {
+                        let loop_time = (new_time % duration).seconds();
+                        anim.current_time = TimeValue::new(loop_time);
+                    } else if new_time >= duration {
+                        anim.is_playing = false;
+                        anim.current_time = duration;
+                    } else {
+                        anim.current_time = new_time;
+                    }
+                } else {
+                    anim.current_time = new_time;
+                }
+
+                // Sample each track at current time
+                for track_box in &anim.clip.tracks {
+                    // Downcast to concrete AnimationTrack<Vector3>
+                    if let Some(track) = track_box.as_any().downcast_ref::<crate::animation::property::AnimationTrack<Vector3>>() {
+                        let sample = track.sample(anim.current_time);
+
+                        match track.name.as_str() {
+                            "position" => {
+                                self._local_transform.position = sample;
+                                transform_changed = true;
+                            }
+                            "rotation" => {
+                                // For now, we only use Z rotation (2D)
+                                self._local_transform.rotation.z = sample.z;
+                                transform_changed = true;
+                            }
+                            "scale" => {
+                                self._local_transform.scale = sample;
+                                transform_changed = true;
+                            }
+                            "opacity" => {
+                                self.opacity = sample.x.clamp(0.0, 1.0);
+                            }
+                            _ => {}
+                        }
+                    }
                 }
             }
         }
-        
-        // Remove finished animations
-        self.animations.retain(|anim| anim.is_playing || (anim.clip.loop_animation && anim.is_playing));
-        
+
+        // Remove finished non-looping animations
+        self.animations.retain(|anim| anim.is_playing || anim.clip.loop_animation);
+
         transform_changed
     }
     
     /// Convert world transform to GPU-compatible matrix
     pub fn compute_model_matrix(&self) -> TransformUniform {
-        // This is a simplified 2D transform matrix
-        // In a full 3D implementation, this would compute a proper 4x4 matrix
-        
+        // Create a column-major 4x4 transformation matrix for WebGPU
+        // WebGPU/WGSL uses column-major matrices by default
+
         let pos = self.world_transform.position;
         let scale = self.world_transform.scale;
-        
-        // Create row-major transform matrix for 2D rendering
+
+        // Simple transform without rotation (2D)
+        // Column-major matrix: each array is a column
+        // | sx  0   0   tx |
+        // | 0   sy  0   ty |
+        // | 0   0   sz  tz |
+        // | 0   0   0   1  |
         TransformUniform {
             model_view_proj: [
-                [scale.x, 0.0, 0.0, pos.x],
-                [0.0, scale.y, 0.0, pos.y],
-                [0.0, 0.0, scale.z, pos.z],
-                [0.0, 0.0, 0.0, 1.0],
+                [scale.x, 0.0, 0.0, 0.0],  // Column 0: X axis
+                [0.0, scale.y, 0.0, 0.0],  // Column 1: Y axis
+                [0.0, 0.0, scale.z, 0.0],  // Column 2: Z axis
+                [pos.x, pos.y, pos.z, 1.0], // Column 3: Translation
             ],
         }
     }
@@ -160,6 +210,7 @@ pub enum Renderable {
     Rectangle { width: f32, height: f32, color: crate::core::Color },
     Line { start: Vector3, end: Vector3, color: crate::core::Color, thickness: f32 },
     Arrow { start: Vector3, end: Vector3, color: crate::core::Color, thickness: f32 },
+    Polygon { vertices: Vec<Vector3>, color: crate::core::Color },
     // Future: Mesh, Sprite, etc.
 }
 
@@ -188,6 +239,13 @@ impl Renderable {
     pub fn as_arrow(&self) -> Option<(&Vector3, &Vector3, &crate::core::Color, &f32)> {
         match self {
             Renderable::Arrow { start, end, color, thickness } => Some((start, end, color, thickness)),
+            _ => None,
+        }
+    }
+
+    pub fn as_polygon(&self) -> Option<(&Vec<Vector3>, &crate::core::Color)> {
+        match self {
+            Renderable::Polygon { vertices, color } => Some((vertices, color)),
             _ => None,
         }
     }
@@ -366,25 +424,25 @@ impl SceneGraph {
         }
     }
     
-    /// Get all visible renderable objects with their transforms
-    pub fn get_visible_renderables(&self) -> Vec<(TransformUniform, Renderable)> {
+    /// Get all visible renderable objects with their transforms and opacity
+    pub fn get_visible_renderables(&self) -> Vec<(TransformUniform, Renderable, f32)> {
         let mut renderables = Vec::new();
-        
+
         for &root_id in &self.root_nodes {
             self.gather_renderables_recursive(root_id, &mut renderables);
         }
-        
+
         renderables
     }
-    
-    /// Recursively gather renderables
-    fn gather_renderables_recursive(&self, node_id: NodeId, renderables: &mut Vec<(TransformUniform, Renderable)>) {
+
+    /// Recursively gather renderables with opacity
+    fn gather_renderables_recursive(&self, node_id: NodeId, renderables: &mut Vec<(TransformUniform, Renderable, f32)>) {
         if let Some(node) = self.nodes.get(&node_id) {
-            if node.visible {
+            if node.visible && node.opacity > 0.0 {
                 if let Some(renderable) = &node.renderable {
-                    renderables.push((node.compute_model_matrix(), renderable.clone()));
+                    renderables.push((node.compute_model_matrix(), renderable.clone(), node.opacity));
                 }
-                
+
                 for &child_id in &node.children {
                     self.gather_renderables_recursive(child_id, renderables);
                 }
@@ -497,10 +555,11 @@ mod tests {
         // Get renderables
         let renderables = graph.get_visible_renderables();
         assert_eq!(renderables.len(), 1);
-        
-        if let Some((_, Renderable::Circle { radius, color })) = renderables.first() {
+
+        if let Some((_, Renderable::Circle { radius, color }, opacity)) = renderables.first() {
             assert_eq!(*radius, 1.0);
             assert_eq!(*color, Color::RED);
+            assert_eq!(*opacity, 1.0); // Default opacity
         } else {
             panic!("Expected Circle renderable");
         }

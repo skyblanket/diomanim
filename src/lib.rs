@@ -52,6 +52,7 @@ pub mod core;
 pub mod mobjects;
 pub mod render;
 pub mod scene;
+pub mod export;
 
 pub mod prelude {
     pub use crate::animation::Timer;

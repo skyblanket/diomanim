@@ -90,16 +90,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Render the scene
     let renderables = scene.get_visible_renderables();
-    for (transform_uniform, renderable) in renderables {
+    for (transform_uniform, renderable, opacity) in renderables {
         renderer.update_transform(&transform_uniform);
+
+        // Apply opacity to color
+        let apply_opacity = |color: Color| -> Color {
+            Color::rgba(color.r, color.g, color.b, color.a * opacity)
+        };
 
         if let Some((radius, color)) = renderable.as_circle() {
             let circle = diomanim::mobjects::Circle {
                 radius: *radius,
-                color: *color,
+                color: apply_opacity(*color),
                 position: Vector3::zero(),
             };
-            renderer.render_circle(&circle, *color, &output_view);
+            renderer.render_circle(&circle, apply_opacity(*color), &output_view);
         }
     }
 
