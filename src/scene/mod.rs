@@ -555,10 +555,11 @@ mod tests {
         // Get renderables
         let renderables = graph.get_visible_renderables();
         assert_eq!(renderables.len(), 1);
-        
-        if let Some((_, Renderable::Circle { radius, color })) = renderables.first() {
+
+        if let Some((_, Renderable::Circle { radius, color }, opacity)) = renderables.first() {
             assert_eq!(*radius, 1.0);
             assert_eq!(*color, Color::RED);
+            assert_eq!(*opacity, 1.0); // Default opacity
         } else {
             panic!("Expected Circle renderable");
         }
