@@ -3,11 +3,11 @@
 //! This example tests the animation effects system by creating three circles
 //! that demonstrate different animation effects.
 
-use diomanim::prelude::*;
-use diomanim::scene::{SceneGraph, Renderable};
 use diomanim::animation::effects;
 use diomanim::animation::property::AnimationInstance;
+use diomanim::prelude::*;
 use diomanim::render::ShapeRenderer;
+use diomanim::scene::{Renderable, SceneGraph};
 
 const WIDTH: u32 = 1280;
 const HEIGHT: u32 = 720;
@@ -37,14 +37,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "FadeIn_Circle".to_string(),
         Transform::from_translation(-0.5, 0.0, 0.0),
     );
-    scene.get_node_mut(circle1_id).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.2,
-        color: Color::RED,
-    });
+    scene
+        .get_node_mut(circle1_id)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.2,
+            color: Color::RED,
+        });
 
     // Animation will start with opacity 0, fade in over DURATION seconds
     let fade_in_anim = effects::fade_in(DURATION);
-    scene.get_node_mut(circle1_id).unwrap()
+    scene
+        .get_node_mut(circle1_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(fade_in_anim, TimeValue::new(0.0)));
 
     // ========================================================================
@@ -55,14 +60,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "FadeOut_Circle".to_string(),
         Transform::from_translation(0.0, 0.0, 0.0),
     );
-    scene.get_node_mut(circle2_id).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.2,
-        color: Color::GREEN,
-    });
+    scene
+        .get_node_mut(circle2_id)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.2,
+            color: Color::GREEN,
+        });
 
     // Start with opacity 1, fade out over DURATION seconds
     let fade_out_anim = effects::fade_out(DURATION);
-    scene.get_node_mut(circle2_id).unwrap()
+    scene
+        .get_node_mut(circle2_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(fade_out_anim, TimeValue::new(0.0)));
 
     // ========================================================================
@@ -73,21 +83,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Create_Circle".to_string(),
         Transform::from_translation(0.5, 0.0, 0.0),
     );
-    scene.get_node_mut(circle3_id).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.2,
-        color: Color::BLUE,
-    });
+    scene
+        .get_node_mut(circle3_id)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.2,
+            color: Color::BLUE,
+        });
 
     // Animation will start with opacity 0 and scale 0, grow and fade in together
     let create_anim = effects::create(DURATION);
-    scene.get_node_mut(circle3_id).unwrap()
+    scene
+        .get_node_mut(circle3_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(create_anim, TimeValue::new(0.0)));
 
     // Initialize all animations by sampling at t=0
     scene.update_animations(TimeValue::new(0.0));
     scene.update_transforms();
 
-    println!("✓ Created scene with {} animated objects", scene.get_visible_renderables().len());
+    println!(
+        "✓ Created scene with {} animated objects",
+        scene.get_visible_renderables().len()
+    );
 
     // ========================================================================
     // RENDER LOOP
@@ -97,16 +115,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let frames_dir = "output/animation_frames";
     std::fs::create_dir_all(frames_dir)?;
 
-    let output_texture = renderer.get_device().create_texture(&wgpu::TextureDescriptor {
-        label: Some("Output Texture"),
-        size: wgpu::Extent3d { width: WIDTH, height: HEIGHT, depth_or_array_layers: 1 },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: wgpu::TextureFormat::Rgba8Unorm,
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-        view_formats: &[],
-    });
+    let output_texture = renderer
+        .get_device()
+        .create_texture(&wgpu::TextureDescriptor {
+            label: Some("Output Texture"),
+            size: wgpu::Extent3d {
+                width: WIDTH,
+                height: HEIGHT,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats: &[],
+        });
     let output_view = output_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
     let total_frames = (DURATION * FPS) as u32;
@@ -122,8 +146,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let current_time = TimeValue::new(frame_idx as f32 * FRAME_TIME);
         let delta_time = current_time - last_time;
 
-        println!("\n  Rendering frame {} ({}% - t={:.2}s, delta={:.3}s)",
-            frame_idx, percentage, current_time.seconds(), delta_time.seconds());
+        println!(
+            "\n  Rendering frame {} ({}% - t={:.2}s, delta={:.3}s)",
+            frame_idx,
+            percentage,
+            current_time.seconds(),
+            delta_time.seconds()
+        );
 
         // Update animations by the actual time delta
         scene.update_animations(delta_time);
@@ -139,14 +168,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("    FadeOut circle opacity: {:.3}", node2.opacity);
         }
         if let Some(node3) = scene.get_node(circle3_id) {
-            println!("    Create circle opacity: {:.3}, scale: {:.3}",
-                node3.opacity, node3.world_transform.scale.x);
+            println!(
+                "    Create circle opacity: {:.3}, scale: {:.3}",
+                node3.opacity, node3.world_transform.scale.x
+            );
         }
 
         // Create command encoder
-        let mut encoder = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("Frame Render Encoder"),
-        });
+        let mut encoder =
+            renderer
+                .get_device()
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("Frame Render Encoder"),
+                });
 
         // Begin render pass
         let mut render_pass = renderer.begin_render_pass(&mut encoder, &output_view, None);
@@ -180,10 +214,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         drop(render_pass);
 
         // Submit command
-        renderer.get_queue().submit(std::iter::once(encoder.finish()));
+        renderer
+            .get_queue()
+            .submit(std::iter::once(encoder.finish()));
 
         // Save frame to PNG
-        let frame_filename = format!("{}/frame_{:03}_{}pct.png", frames_dir, frame_idx, percentage);
+        let frame_filename = format!(
+            "{}/frame_{:03}_{}pct.png",
+            frames_dir, frame_idx, percentage
+        );
         save_texture_to_png(&renderer, &output_texture, WIDTH, HEIGHT, &frame_filename);
         println!("    ✓ Saved {}", frame_filename);
     }
@@ -207,7 +246,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Saves a WebGPU texture to a PNG file
-fn save_texture_to_png(renderer: &ShapeRenderer, texture: &wgpu::Texture, width: u32, height: u32, filename: &str) {
+fn save_texture_to_png(
+    renderer: &ShapeRenderer,
+    texture: &wgpu::Texture,
+    width: u32,
+    height: u32,
+    filename: &str,
+) {
     // Calculate aligned bytes per row (must be multiple of 256)
     const COPY_BYTES_PER_ROW_ALIGNMENT: u32 = 256;
     let unpadded_bytes_per_row = width * 4;
@@ -217,17 +262,22 @@ fn save_texture_to_png(renderer: &ShapeRenderer, texture: &wgpu::Texture, width:
 
     let buffer_size = (padded_bytes_per_row * height) as wgpu::BufferAddress;
 
-    let staging_buffer = renderer.get_device().create_buffer(&wgpu::BufferDescriptor {
-        label: Some("Staging Buffer"),
-        size: buffer_size,
-        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-        mapped_at_creation: false,
-    });
+    let staging_buffer = renderer
+        .get_device()
+        .create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Staging Buffer"),
+            size: buffer_size,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
 
     // Copy texture to buffer
-    let mut encoder = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
-        label: Some("Copy Encoder"),
-    });
+    let mut encoder =
+        renderer
+            .get_device()
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Copy Encoder"),
+            });
 
     encoder.copy_texture_to_buffer(
         texture.as_image_copy(),
@@ -239,10 +289,16 @@ fn save_texture_to_png(renderer: &ShapeRenderer, texture: &wgpu::Texture, width:
                 rows_per_image: Some(height),
             },
         },
-        wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
     );
 
-    renderer.get_queue().submit(std::iter::once(encoder.finish()));
+    renderer
+        .get_queue()
+        .submit(std::iter::once(encoder.finish()));
 
     // Map the buffer synchronously
     let buffer_slice = staging_buffer.slice(..);

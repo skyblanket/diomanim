@@ -6,10 +6,10 @@
 //! - Keyframe animation system with interpolation
 //! - Real-time frame generation and video export
 
-use diomanim::core::*;
 use diomanim::animation::property::{AnimationClip, AnimationInstance};
-use diomanim::scene::*;
+use diomanim::core::*;
 use diomanim::render::ShapeRenderer;
+use diomanim::scene::*;
 use std::time::Instant;
 
 /// Configuration for the demo animation
@@ -34,17 +34,26 @@ fn main() {
 
         println!("\nBuilding scene graph...");
         let mut scene = SceneGraph::new();
-        
+
         // Create center node
         let center_id = scene.create_node("Center".to_string());
-        scene.get_node_mut(center_id).unwrap().set_renderable(Renderable::Circle {
-            radius: 0.15,
-            color: Color::new(0.2, 0.2, 0.2),
-        });
+        scene
+            .get_node_mut(center_id)
+            .unwrap()
+            .set_renderable(Renderable::Circle {
+                radius: 0.15,
+                color: Color::new(0.2, 0.2, 0.2),
+            });
         create_scaling_animation(&mut scene, center_id);
 
         // Create orbiting children
-        let colors = [Color::RED, Color::GREEN, Color::BLUE, Color::YELLOW, Color::CYAN];
+        let colors = [
+            Color::RED,
+            Color::GREEN,
+            Color::BLUE,
+            Color::YELLOW,
+            Color::CYAN,
+        ];
         for (i, &color) in colors.iter().enumerate() {
             let angle = (i as f32 / colors.len() as f32) * std::f32::consts::TAU;
             let orbit_radius = 0.3;
@@ -54,36 +63,46 @@ fn main() {
                 Transform::from_translation(
                     angle.cos() * orbit_radius,
                     angle.sin() * orbit_radius,
-                    0.0
-                )
+                    0.0,
+                ),
             );
 
-            scene.get_node_mut(child_id).unwrap().set_renderable(Renderable::Circle {
-                radius: 0.1,
-                color,
-            });
+            scene
+                .get_node_mut(child_id)
+                .unwrap()
+                .set_renderable(Renderable::Circle { radius: 0.1, color });
 
             create_rotation_animation(&mut scene, child_id, angle, i);
             scene.parent(child_id, center_id).unwrap();
         }
 
-        println!("✓ Created {} nodes with {} animations", colors.len() + 1, colors.len() + 1);
+        println!(
+            "✓ Created {} nodes with {} animations",
+            colors.len() + 1,
+            colors.len() + 1
+        );
 
         println!("\nRendering frames...");
 
         let frames_dir = "frames";
         std::fs::create_dir_all(frames_dir).expect("Failed to create frames directory");
 
-        let output_texture = renderer.get_device().create_texture(&wgpu::TextureDescriptor {
-            label: Some("Output Texture"),
-            size: wgpu::Extent3d { width: WIDTH, height: HEIGHT, depth_or_array_layers: 1 },
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8Unorm,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-            view_formats: &[],
-        });
+        let output_texture = renderer
+            .get_device()
+            .create_texture(&wgpu::TextureDescriptor {
+                label: Some("Output Texture"),
+                size: wgpu::Extent3d {
+                    width: WIDTH,
+                    height: HEIGHT,
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Rgba8Unorm,
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+                view_formats: &[],
+            });
         let output_view = output_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         let start_time = Instant::now();
@@ -96,13 +115,16 @@ fn main() {
             scene.update_transforms();
 
             // Create command encoder
-            let mut encoder = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("Frame Render Encoder"),
-            });
+            let mut encoder =
+                renderer
+                    .get_device()
+                    .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                        label: Some("Frame Render Encoder"),
+                    });
 
             // Begin render pass once per frame
             let mut render_pass = renderer.begin_render_pass(&mut encoder, &output_view, None);
-            
+
             render_pass.set_pipeline(renderer.get_pipeline());
             render_pass.set_bind_group(0, renderer.get_transform_bind_group(), &[]);
 
@@ -123,21 +145,40 @@ fn main() {
                     };
                     renderer.draw_circle(&circle, apply_opacity(*color), &mut render_pass);
                 } else if let Some((width, height, color)) = renderable.as_rectangle() {
-                    renderer.draw_rectangle(*width, *height, apply_opacity(*color), &mut render_pass);
+                    renderer.draw_rectangle(
+                        *width,
+                        *height,
+                        apply_opacity(*color),
+                        &mut render_pass,
+                    );
                 } else if let Some((start, end, color, thickness)) = renderable.as_line() {
-                    renderer.draw_line(*start, *end, apply_opacity(*color), *thickness, &mut render_pass);
+                    renderer.draw_line(
+                        *start,
+                        *end,
+                        apply_opacity(*color),
+                        *thickness,
+                        &mut render_pass,
+                    );
                 } else if let Some((start, end, color, thickness)) = renderable.as_arrow() {
-                    renderer.draw_arrow(*start, *end, apply_opacity(*color), *thickness, &mut render_pass);
+                    renderer.draw_arrow(
+                        *start,
+                        *end,
+                        apply_opacity(*color),
+                        *thickness,
+                        &mut render_pass,
+                    );
                 } else if let Some((vertices, color)) = renderable.as_polygon() {
                     renderer.draw_polygon(vertices, apply_opacity(*color), &mut render_pass);
                 }
             }
-            
+
             // End render pass
             drop(render_pass);
 
             // Submit command (once per frame instead of per object)
-            renderer.get_queue().submit(std::iter::once(encoder.finish()));
+            renderer
+                .get_queue()
+                .submit(std::iter::once(encoder.finish()));
 
             let frame_filename = format!("{}/frame_{:05}.png", frames_dir, frame_count);
             save_texture_to_png(&renderer, &output_texture, WIDTH, HEIGHT, &frame_filename);
@@ -156,12 +197,17 @@ fn main() {
         let ffmpeg_result = std::process::Command::new("ffmpeg")
             .args(&[
                 "-y",
-                "-framerate", &format!("{}", FPS),
-                "-i", "frames/frame_%05d.png",
-                "-c:v", "libx264",
-                "-pix_fmt", "yuv420p",
-                "-crf", "18",
-                &output_video
+                "-framerate",
+                &format!("{}", FPS),
+                "-i",
+                "frames/frame_%05d.png",
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                "-crf",
+                "18",
+                &output_video,
             ])
             .output();
 
@@ -170,7 +216,10 @@ fn main() {
                 println!("✓ Video saved: {}", output_video);
             }
             Ok(output) => {
-                println!("✗ FFmpeg error: {}", String::from_utf8_lossy(&output.stderr));
+                println!(
+                    "✗ FFmpeg error: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
             }
             Err(_) => {
                 println!("✗ FFmpeg not found. Install with: brew install ffmpeg");
@@ -192,7 +241,12 @@ fn main() {
 }
 
 /// Creates a rotation animation for an orbiting object
-fn create_rotation_animation(scene: &mut SceneGraph, node_id: NodeId, start_angle: f32, index: usize) {
+fn create_rotation_animation(
+    scene: &mut SceneGraph,
+    node_id: NodeId,
+    start_angle: f32,
+    index: usize,
+) {
     use diomanim::animation::property::{AnimationTrack, Keyframe};
 
     let mut animation = AnimationClip::new(format!("rotate_{}", index));
@@ -210,7 +264,9 @@ fn create_rotation_animation(scene: &mut SceneGraph, node_id: NodeId, start_angl
     animation.add_track(track);
     animation.loop_animation = true;
 
-    scene.get_node_mut(node_id).unwrap()
+    scene
+        .get_node_mut(node_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(animation, TimeValue::new(0.0)));
 }
 
@@ -222,31 +278,47 @@ fn create_scaling_animation(scene: &mut SceneGraph, node_id: NodeId) {
     let mut track = AnimationTrack::new("scale".to_string());
 
     track.add_keyframe(Keyframe::new(TimeValue::new(0.0), Vector3::one()));
-    track.add_keyframe(Keyframe::new(TimeValue::new(1.5), Vector3::new(1.5, 1.5, 1.5)));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(1.5),
+        Vector3::new(1.5, 1.5, 1.5),
+    ));
     track.add_keyframe(Keyframe::new(TimeValue::new(3.0), Vector3::one()));
 
     animation.add_track(track);
     animation.loop_animation = true;
 
-    scene.get_node_mut(node_id).unwrap()
+    scene
+        .get_node_mut(node_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(animation, TimeValue::new(0.0)));
 }
 
 /// Saves a WebGPU texture to a PNG file
-fn save_texture_to_png(renderer: &ShapeRenderer, texture: &wgpu::Texture, width: u32, height: u32, filename: &str) {
+fn save_texture_to_png(
+    renderer: &ShapeRenderer,
+    texture: &wgpu::Texture,
+    width: u32,
+    height: u32,
+    filename: &str,
+) {
     let buffer_size = (width * height * 4) as wgpu::BufferAddress;
 
-    let staging_buffer = renderer.get_device().create_buffer(&wgpu::BufferDescriptor {
-        label: Some("Staging Buffer"),
-        size: buffer_size,
-        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-        mapped_at_creation: false,
-    });
+    let staging_buffer = renderer
+        .get_device()
+        .create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Staging Buffer"),
+            size: buffer_size,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
 
     // Copy texture to buffer
-    let mut encoder = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
-        label: Some("Copy Encoder"),
-    });
+    let mut encoder =
+        renderer
+            .get_device()
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Copy Encoder"),
+            });
 
     encoder.copy_texture_to_buffer(
         texture.as_image_copy(),
@@ -258,10 +330,16 @@ fn save_texture_to_png(renderer: &ShapeRenderer, texture: &wgpu::Texture, width:
                 rows_per_image: Some(height),
             },
         },
-        wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
     );
 
-    renderer.get_queue().submit(std::iter::once(encoder.finish()));
+    renderer
+        .get_queue()
+        .submit(std::iter::once(encoder.finish()));
 
     // Map the buffer synchronously using pollster
     let buffer_slice = staging_buffer.slice(..);

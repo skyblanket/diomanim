@@ -16,7 +16,13 @@ pub struct VideoExportSettings {
 }
 
 impl VideoExportSettings {
-    pub fn new(width: u32, height: u32, fps: u32, output_path: String, input_pattern: String) -> Self {
+    pub fn new(
+        width: u32,
+        height: u32,
+        fps: u32,
+        output_path: String,
+        input_pattern: String,
+    ) -> Self {
         Self {
             width,
             height,
@@ -47,7 +53,9 @@ impl VideoExportSettings {
 /// );
 /// export_video_ffmpeg(&settings).unwrap();
 /// ```
-pub fn export_video_ffmpeg(settings: &VideoExportSettings) -> Result<(), Box<dyn std::error::Error>> {
+pub fn export_video_ffmpeg(
+    settings: &VideoExportSettings,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("╔═══════════════════════════════════════════════════════════════╗");
     println!("║  Exporting Video with FFmpeg                                  ║");
     println!("╚═══════════════════════════════════════════════════════════════╝\n");
@@ -58,9 +66,7 @@ pub fn export_video_ffmpeg(settings: &VideoExportSettings) -> Result<(), Box<dyn
     println!();
 
     // Check if ffmpeg is available
-    let ffmpeg_check = Command::new("ffmpeg")
-        .arg("-version")
-        .output();
+    let ffmpeg_check = Command::new("ffmpeg").arg("-version").output();
 
     if ffmpeg_check.is_err() {
         return Err("ffmpeg not found. Please install ffmpeg to export videos.".into());
@@ -117,13 +123,8 @@ pub fn export_video(
     fps: u32,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let input_pattern = format!("{}/frame_%04d.png", frames_dir);
-    let settings = VideoExportSettings::new(
-        width,
-        height,
-        fps,
-        output_path.to_string(),
-        input_pattern,
-    );
+    let settings =
+        VideoExportSettings::new(width, height, fps, output_path.to_string(), input_pattern);
     export_video_ffmpeg(&settings)
 }
 

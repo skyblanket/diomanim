@@ -43,7 +43,7 @@ impl Transform {
         self.scale = Vector3::new(scale, scale, scale);
         self
     }
-    
+
     pub fn scale_uniform(&mut self, scale: f32) {
         self.scale = Vector3::new(scale, scale, scale);
     }
@@ -55,19 +55,19 @@ impl Transform {
     pub fn rotate(&mut self, mut rotation: Quaternion) {
         // Combine rotations by multiplication
         let q2 = self.rotation;
-        
+
         // Quaternion multiplication: q1 * q2
         let w = rotation.w * q2.w - rotation.x * q2.x - rotation.y * q2.y - rotation.z * q2.z;
         let x = rotation.w * q2.x + rotation.x * q2.w + rotation.y * q2.z - rotation.z * q2.y;
         let y = rotation.w * q2.y - rotation.x * q2.z + rotation.y * q2.w + rotation.z * q2.x;
         let z = rotation.w * q2.z + rotation.x * q2.y - rotation.y * q2.x + rotation.z * q2.w;
-        
+
         rotation.x = x;
         rotation.y = y;
         rotation.z = z;
         rotation.w = w;
         rotation.normalize();
-        
+
         self.rotation = rotation;
     }
 
@@ -75,7 +75,7 @@ impl Transform {
         let forward = (target - self.position).normalized();
         let right = up.cross(&forward).normalized();
         let up = forward.cross(&right);
-        
+
         self.rotation = Quaternion::from_basis_vectors(&right, &up, &forward);
     }
 
@@ -83,7 +83,7 @@ impl Transform {
         let translation = Matrix4::from_translation(self.position);
         let rotation = Matrix4::from_quaternion(self.rotation);
         let scale = Matrix4::from_scale(self.scale);
-        
+
         translation * rotation * scale
     }
 
@@ -91,8 +91,12 @@ impl Transform {
         let inv_rotation = self.rotation.inverse();
         let inv_scale = Vector3::new(1.0 / self.scale.x, 1.0 / self.scale.y, 1.0 / self.scale.z);
         let rotated = inv_rotation.rotate_vector(self.position * (-1.0));
-        let inv_position = Vector3::new(rotated.x * inv_scale.x, rotated.y * inv_scale.y, rotated.z * inv_scale.z);
-        
+        let inv_position = Vector3::new(
+            rotated.x * inv_scale.x,
+            rotated.y * inv_scale.y,
+            rotated.z * inv_scale.z,
+        );
+
         Self {
             position: inv_position,
             rotation: inv_rotation,
@@ -109,12 +113,20 @@ impl Transform {
     }
 
     pub fn transform_point(&self, point: Vector3) -> Vector3 {
-        let scaled = Vector3::new(point.x * self.scale.x, point.y * self.scale.y, point.z * self.scale.z);
+        let scaled = Vector3::new(
+            point.x * self.scale.x,
+            point.y * self.scale.y,
+            point.z * self.scale.z,
+        );
         self.rotation.rotate_vector(scaled) + self.position
     }
 
     pub fn transform_vector(&self, vector: Vector3) -> Vector3 {
-        let scaled = Vector3::new(vector.x * self.scale.x, vector.y * self.scale.y, vector.z * self.scale.z);
+        let scaled = Vector3::new(
+            vector.x * self.scale.x,
+            vector.y * self.scale.y,
+            vector.z * self.scale.z,
+        );
         self.rotation.rotate_vector(scaled)
     }
 }
@@ -152,7 +164,7 @@ impl Quaternion {
         let angle = angle * 0.5;
         let sin_angle = angle.sin();
         let cos_angle = angle.cos();
-        
+
         Self::new(
             axis.x * sin_angle,
             axis.y * sin_angle,
@@ -176,7 +188,7 @@ impl Quaternion {
 
     pub fn from_basis_vectors(right: &Vector3, up: &Vector3, forward: &Vector3) -> Self {
         let trace = right.x + up.y + forward.z;
-        
+
         if trace > 0.0 {
             let s = 0.5 / (trace + 1.0).sqrt();
             Self::new(
@@ -261,7 +273,8 @@ impl Quaternion {
                 self.y + t * (other.y - self.y),
                 self.z + t * (other.z - self.z),
                 self.w + t * (other.w - self.w),
-            ).normalized();
+            )
+            .normalized();
         }
 
         let theta_0 = dot.acos();
@@ -290,7 +303,7 @@ impl Quaternion {
         let q_vec = Vector3::new(self.x, self.y, self.z);
         let t = q_vec.cross(&vector) * 2.0;
         let u = q_vec.cross(&t) * 2.0;
-        
+
         vector + t * self.w + u
     }
 }
@@ -356,20 +369,28 @@ impl Matrix4 {
         let mut result = Self::identity();
         for i in 0..4 {
             for j in 0..4 {
-                result.data[i][j] = 
-                    self.data[i][0] * other.data[0][j] +
-                    self.data[i][1] * other.data[1][j] +
-                    self.data[i][2] * other.data[2][j] +
-                    self.data[i][3] * other.data[3][j];
+                result.data[i][j] = self.data[i][0] * other.data[0][j]
+                    + self.data[i][1] * other.data[1][j]
+                    + self.data[i][2] * other.data[2][j]
+                    + self.data[i][3] * other.data[3][j];
             }
         }
         result
     }
 
     pub fn transform_point(&self, point: Vector3) -> Vector3 {
-        let x = self.data[0][0] * point.x + self.data[0][1] * point.y + self.data[0][2] * point.z + self.data[0][3];
-        let y = self.data[1][0] * point.x + self.data[1][1] * point.y + self.data[1][2] * point.z + self.data[1][3];
-        let z = self.data[2][0] * point.x + self.data[2][1] * point.y + self.data[2][2] * point.z + self.data[2][3];
+        let x = self.data[0][0] * point.x
+            + self.data[0][1] * point.y
+            + self.data[0][2] * point.z
+            + self.data[0][3];
+        let y = self.data[1][0] * point.x
+            + self.data[1][1] * point.y
+            + self.data[1][2] * point.z
+            + self.data[1][3];
+        let z = self.data[2][0] * point.x
+            + self.data[2][1] * point.y
+            + self.data[2][2] * point.z
+            + self.data[2][3];
         Vector3::new(x, y, z)
     }
 }
@@ -393,11 +414,10 @@ impl Matrix4 {
         let mut result = Self::identity();
         for i in 0..4 {
             for j in 0..4 {
-                result.data[i][j] = 
-                    self.data[i][0] * other.data[0][j] +
-                    self.data[i][1] * other.data[1][j] +
-                    self.data[i][2] * other.data[2][j] +
-                    self.data[i][3] * other.data[3][j];
+                result.data[i][j] = self.data[i][0] * other.data[0][j]
+                    + self.data[i][1] * other.data[1][j]
+                    + self.data[i][2] * other.data[2][j]
+                    + self.data[i][3] * other.data[3][j];
             }
         }
         result

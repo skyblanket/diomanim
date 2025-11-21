@@ -20,8 +20,14 @@ pub fn fade_in(duration: f32) -> AnimationClip {
     let mut clip = AnimationClip::new("FadeIn".to_string());
     let mut track = AnimationTrack::new("opacity".to_string());
 
-    track.add_keyframe(Keyframe::new(TimeValue::new(0.0), Vector3::new(0.0, 0.0, 0.0)));
-    track.add_keyframe(Keyframe::new(TimeValue::new(duration), Vector3::new(1.0, 0.0, 0.0)));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(0.0),
+        Vector3::new(0.0, 0.0, 0.0),
+    ));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(duration),
+        Vector3::new(1.0, 0.0, 0.0),
+    ));
 
     clip.add_track(track);
     clip.loop_animation = false;
@@ -33,8 +39,14 @@ pub fn fade_out(duration: f32) -> AnimationClip {
     let mut clip = AnimationClip::new("FadeOut".to_string());
     let mut track = AnimationTrack::new("opacity".to_string());
 
-    track.add_keyframe(Keyframe::new(TimeValue::new(0.0), Vector3::new(1.0, 0.0, 0.0)));
-    track.add_keyframe(Keyframe::new(TimeValue::new(duration), Vector3::new(0.0, 0.0, 0.0)));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(0.0),
+        Vector3::new(1.0, 0.0, 0.0),
+    ));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(duration),
+        Vector3::new(0.0, 0.0, 0.0),
+    ));
 
     clip.add_track(track);
     clip.loop_animation = false;
@@ -42,7 +54,11 @@ pub fn fade_out(duration: f32) -> AnimationClip {
 }
 
 /// Create a FadeInOut animation that fades in then out
-pub fn fade_in_out(fade_in_duration: f32, hold_duration: f32, fade_out_duration: f32) -> AnimationClip {
+pub fn fade_in_out(
+    fade_in_duration: f32,
+    hold_duration: f32,
+    fade_out_duration: f32,
+) -> AnimationClip {
     let mut clip = AnimationClip::new("FadeInOut".to_string());
     let mut track = AnimationTrack::new("opacity".to_string());
 
@@ -50,10 +66,22 @@ pub fn fade_in_out(fade_in_duration: f32, hold_duration: f32, fade_out_duration:
     let t2 = t1 + hold_duration;
     let t3 = t2 + fade_out_duration;
 
-    track.add_keyframe(Keyframe::new(TimeValue::new(0.0), Vector3::new(0.0, 0.0, 0.0)));
-    track.add_keyframe(Keyframe::new(TimeValue::new(t1), Vector3::new(1.0, 0.0, 0.0)));
-    track.add_keyframe(Keyframe::new(TimeValue::new(t2), Vector3::new(1.0, 0.0, 0.0)));
-    track.add_keyframe(Keyframe::new(TimeValue::new(t3), Vector3::new(0.0, 0.0, 0.0)));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(0.0),
+        Vector3::new(0.0, 0.0, 0.0),
+    ));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(t1),
+        Vector3::new(1.0, 0.0, 0.0),
+    ));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(t2),
+        Vector3::new(1.0, 0.0, 0.0),
+    ));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(t3),
+        Vector3::new(0.0, 0.0, 0.0),
+    ));
 
     clip.add_track(track);
     clip.loop_animation = false;
@@ -65,8 +93,14 @@ pub fn grow_from_center(duration: f32) -> AnimationClip {
     let mut clip = AnimationClip::new("GrowFromCenter".to_string());
     let mut track = AnimationTrack::new("scale".to_string());
 
-    track.add_keyframe(Keyframe::new(TimeValue::new(0.0), Vector3::new(0.0, 0.0, 0.0)));
-    track.add_keyframe(Keyframe::new(TimeValue::new(duration), Vector3::new(1.0, 1.0, 1.0)));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(0.0),
+        Vector3::new(0.0, 0.0, 0.0),
+    ));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(duration),
+        Vector3::new(1.0, 1.0, 1.0),
+    ));
 
     clip.add_track(track);
     clip.loop_animation = false;
@@ -78,8 +112,14 @@ pub fn shrink_to_center(duration: f32) -> AnimationClip {
     let mut clip = AnimationClip::new("ShrinkToCenter".to_string());
     let mut track = AnimationTrack::new("scale".to_string());
 
-    track.add_keyframe(Keyframe::new(TimeValue::new(0.0), Vector3::new(1.0, 1.0, 1.0)));
-    track.add_keyframe(Keyframe::new(TimeValue::new(duration), Vector3::new(0.0, 0.0, 0.0)));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(0.0),
+        Vector3::new(1.0, 1.0, 1.0),
+    ));
+    track.add_keyframe(Keyframe::new(
+        TimeValue::new(duration),
+        Vector3::new(0.0, 0.0, 0.0),
+    ));
 
     clip.add_track(track);
     clip.loop_animation = false;
@@ -92,13 +132,25 @@ pub fn create(duration: f32) -> AnimationClip {
 
     // Opacity track
     let mut opacity_track = AnimationTrack::new("opacity".to_string());
-    opacity_track.add_keyframe(Keyframe::new(TimeValue::new(0.0), Vector3::new(0.0, 0.0, 0.0)));
-    opacity_track.add_keyframe(Keyframe::new(TimeValue::new(duration), Vector3::new(1.0, 0.0, 0.0)));
+    opacity_track.add_keyframe(Keyframe::new(
+        TimeValue::new(0.0),
+        Vector3::new(0.0, 0.0, 0.0),
+    ));
+    opacity_track.add_keyframe(Keyframe::new(
+        TimeValue::new(duration),
+        Vector3::new(1.0, 0.0, 0.0),
+    ));
 
     // Scale track
     let mut scale_track = AnimationTrack::new("scale".to_string());
-    scale_track.add_keyframe(Keyframe::new(TimeValue::new(0.0), Vector3::new(0.0, 0.0, 0.0)));
-    scale_track.add_keyframe(Keyframe::new(TimeValue::new(duration), Vector3::new(1.0, 1.0, 1.0)));
+    scale_track.add_keyframe(Keyframe::new(
+        TimeValue::new(0.0),
+        Vector3::new(0.0, 0.0, 0.0),
+    ));
+    scale_track.add_keyframe(Keyframe::new(
+        TimeValue::new(duration),
+        Vector3::new(1.0, 1.0, 1.0),
+    ));
 
     clip.add_track(opacity_track);
     clip.add_track(scale_track);
@@ -112,13 +164,25 @@ pub fn uncreate(duration: f32) -> AnimationClip {
 
     // Opacity track
     let mut opacity_track = AnimationTrack::new("opacity".to_string());
-    opacity_track.add_keyframe(Keyframe::new(TimeValue::new(0.0), Vector3::new(1.0, 0.0, 0.0)));
-    opacity_track.add_keyframe(Keyframe::new(TimeValue::new(duration), Vector3::new(0.0, 0.0, 0.0)));
+    opacity_track.add_keyframe(Keyframe::new(
+        TimeValue::new(0.0),
+        Vector3::new(1.0, 0.0, 0.0),
+    ));
+    opacity_track.add_keyframe(Keyframe::new(
+        TimeValue::new(duration),
+        Vector3::new(0.0, 0.0, 0.0),
+    ));
 
     // Scale track
     let mut scale_track = AnimationTrack::new("scale".to_string());
-    scale_track.add_keyframe(Keyframe::new(TimeValue::new(0.0), Vector3::new(1.0, 1.0, 1.0)));
-    scale_track.add_keyframe(Keyframe::new(TimeValue::new(duration), Vector3::new(0.0, 0.0, 0.0)));
+    scale_track.add_keyframe(Keyframe::new(
+        TimeValue::new(0.0),
+        Vector3::new(1.0, 1.0, 1.0),
+    ));
+    scale_track.add_keyframe(Keyframe::new(
+        TimeValue::new(duration),
+        Vector3::new(0.0, 0.0, 0.0),
+    ));
 
     clip.add_track(opacity_track);
     clip.add_track(scale_track);
@@ -182,11 +246,11 @@ pub fn rotate(from_angle: f32, to_angle: f32, duration: f32) -> AnimationClip {
 
     track.add_keyframe(Keyframe::new(
         TimeValue::new(0.0),
-        Vector3::new(0.0, 0.0, from_angle)
+        Vector3::new(0.0, 0.0, from_angle),
     ));
     track.add_keyframe(Keyframe::new(
         TimeValue::new(duration),
-        Vector3::new(0.0, 0.0, to_angle)
+        Vector3::new(0.0, 0.0, to_angle),
     ));
 
     clip.add_track(track);
@@ -234,11 +298,11 @@ pub fn transform(
     let mut rot_track = AnimationTrack::new("rotation".to_string());
     rot_track.add_keyframe(Keyframe::new(
         TimeValue::new(0.0),
-        Vector3::new(0.0, 0.0, from_rotation)
+        Vector3::new(0.0, 0.0, from_rotation),
     ));
     rot_track.add_keyframe(Keyframe::new(
         TimeValue::new(duration),
-        Vector3::new(0.0, 0.0, to_rotation)
+        Vector3::new(0.0, 0.0, to_rotation),
     ));
 
     clip.add_track(pos_track);

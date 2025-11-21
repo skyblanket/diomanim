@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::ops::{Add, Sub, Mul, Div, Neg};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub struct Vector3 {
@@ -19,11 +19,21 @@ impl Vector3 {
         Self { x, y, z }
     }
 
-    pub fn zero() -> Self { Self::new(0.0, 0.0, 0.0) }
-    pub fn one() -> Self { Self::new(1.0, 1.0, 1.0) }
-    pub fn up() -> Self { Self::new(0.0, 1.0, 0.0) }
-    pub fn right() -> Self { Self::new(1.0, 0.0, 0.0) }
-    pub fn forward() -> Self { Self::new(0.0, 0.0, 1.0) }
+    pub fn zero() -> Self {
+        Self::new(0.0, 0.0, 0.0)
+    }
+    pub fn one() -> Self {
+        Self::new(1.0, 1.0, 1.0)
+    }
+    pub fn up() -> Self {
+        Self::new(0.0, 1.0, 0.0)
+    }
+    pub fn right() -> Self {
+        Self::new(1.0, 0.0, 0.0)
+    }
+    pub fn forward() -> Self {
+        Self::new(0.0, 0.0, 1.0)
+    }
 
     pub fn length(&self) -> f32 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
@@ -68,10 +78,18 @@ impl Vector2 {
         Self { x, y }
     }
 
-    pub fn zero() -> Self { Self::new(0.0, 0.0) }
-    pub fn one() -> Self { Self::new(1.0, 1.0) }
-    pub fn up() -> Self { Self::new(0.0, 1.0) }
-    pub fn right() -> Self { Self::new(1.0, 0.0) }
+    pub fn zero() -> Self {
+        Self::new(0.0, 0.0)
+    }
+    pub fn one() -> Self {
+        Self::new(1.0, 1.0)
+    }
+    pub fn up() -> Self {
+        Self::new(0.0, 1.0)
+    }
+    pub fn right() -> Self {
+        Self::new(1.0, 0.0)
+    }
 
     pub fn length(&self) -> f32 {
         (self.x * self.x + self.y * self.y).sqrt()
@@ -97,10 +115,7 @@ impl Vector2 {
     pub fn rotate(&self, angle: f32) -> Self {
         let cos = angle.cos();
         let sin = angle.sin();
-        Self::new(
-            self.x * cos - self.y * sin,
-            self.x * sin + self.y * cos,
-        )
+        Self::new(self.x * cos - self.y * sin, self.x * sin + self.y * cos)
     }
 
     pub fn lerp(&self, other: &Self, t: f32) -> Self {
