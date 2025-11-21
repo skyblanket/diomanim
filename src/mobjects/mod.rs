@@ -24,7 +24,7 @@
 //! square.move_to(Vector3::new(-5.0, 0.0, 0.0));
 //! ```
 
-use crate::core::{Vector3, Color};
+use crate::core::{Color, Vector3};
 
 #[derive(Debug, Clone)]
 pub struct Circle {
@@ -41,7 +41,7 @@ impl Circle {
             position: Vector3::zero(),
         }
     }
-    
+
     pub fn move_to(&mut self, position: Vector3) {
         self.position = position;
     }
@@ -62,7 +62,7 @@ impl Square {
             position: Vector3::zero(),
         }
     }
-    
+
     pub fn move_to(&mut self, position: Vector3) {
         self.position = position;
     }
@@ -85,11 +85,11 @@ impl Rectangle {
             position: Vector3::zero(),
         }
     }
-    
+
     pub fn from_square(side_length: f32, color: Color) -> Self {
         Self::new(side_length, side_length, color)
     }
-    
+
     pub fn move_to(&mut self, position: Vector3) {
         self.position = position;
     }
@@ -111,17 +111,18 @@ impl Line {
             thickness,
         }
     }
-    
+
     pub fn from_points(start: Vector3, end: Vector3, color: Color) -> Self {
         Self::new(start, end, color, 2.0)
     }
-    
+
     pub fn length(&self) -> f32 {
-        ((self.end.x - self.start.x).powi(2) + 
-         (self.end.y - self.start.y).powi(2) + 
-         (self.end.z - self.start.z).powi(2)).sqrt()
+        ((self.end.x - self.start.x).powi(2)
+            + (self.end.y - self.start.y).powi(2)
+            + (self.end.z - self.start.z).powi(2))
+        .sqrt()
     }
-    
+
     pub fn direction(&self) -> Vector3 {
         let length = self.length();
         if length > 0.0 {
@@ -134,7 +135,7 @@ impl Line {
             Vector3::new(0.0, 0.0, 0.0)
         }
     }
-    
+
     pub fn perpendicular(&self) -> Vector3 {
         let dir = self.direction();
         // In 2D, perpendicular is (y, -x)
@@ -161,13 +162,13 @@ impl Arrow {
             tip_size,
         }
     }
-    
+
     pub fn from_points(start: Vector3, end: Vector3, color: Color) -> Self {
         let thickness = 2.0;
         let tip_size = 8.0;
         Self::new(start, end, color, thickness, tip_size)
     }
-    
+
     pub fn line(&self) -> Line {
         // Calculate line end (excluding tip)
         let dir = Vector3::new(
@@ -176,7 +177,7 @@ impl Arrow {
             self.end.z - self.start.z,
         );
         let length = (dir.x.powi(2) + dir.y.powi(2)).sqrt();
-        
+
         if length > 0.0 && length > self.tip_size / 100.0 {
             let scale = (length - self.tip_size / 100.0) / length;
             let line_end = Vector3::new(
@@ -245,7 +246,11 @@ impl Polygon {
 
         for i in 0..(points * 2) {
             let angle = i as f32 * angle_step - std::f32::consts::PI / 2.0;
-            let radius = if i % 2 == 0 { outer_radius } else { inner_radius };
+            let radius = if i % 2 == 0 {
+                outer_radius
+            } else {
+                inner_radius
+            };
             let x = radius * angle.cos();
             let y = radius * angle.sin();
             vertices.push(Vector3::new(x, y, 0.0));

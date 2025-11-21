@@ -7,12 +7,12 @@
 //!
 //! Requirements: ffmpeg must be installed on the system
 
-use diomanim::prelude::*;
-use diomanim::animation::property::{AnimationClip, AnimationTrack, AnimationInstance, Keyframe};
-use diomanim::scene::{SceneGraph, Renderable};
-use diomanim::mobjects::Polygon;
-use diomanim::render::ShapeRenderer;
+use diomanim::animation::property::{AnimationClip, AnimationInstance, AnimationTrack, Keyframe};
 use diomanim::export::export_video;
+use diomanim::mobjects::Polygon;
+use diomanim::prelude::*;
+use diomanim::render::ShapeRenderer;
+use diomanim::scene::{Renderable, SceneGraph};
 use std::time::Instant;
 
 const WIDTH: u32 = 1280;
@@ -44,18 +44,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Moving_Circle".to_string(),
         Transform::from_translation(-0.6, 0.0, 0.0),
     );
-    scene.get_node_mut(circle_id).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.15,
-        color: Color::RED,
-    });
+    scene
+        .get_node_mut(circle_id)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.15,
+            color: Color::RED,
+        });
 
     // Animate circle movement
     let mut move_anim = AnimationClip::new("move".to_string());
     let mut move_track = AnimationTrack::new("position".to_string());
-    move_track.add_keyframe(Keyframe::new(TimeValue::new(0.0), Vector3::new(-0.6, 0.0, 0.0)));
-    move_track.add_keyframe(Keyframe::new(TimeValue::new(DURATION), Vector3::new(0.6, 0.0, 0.0)));
+    move_track.add_keyframe(Keyframe::new(
+        TimeValue::new(0.0),
+        Vector3::new(-0.6, 0.0, 0.0),
+    ));
+    move_track.add_keyframe(Keyframe::new(
+        TimeValue::new(DURATION),
+        Vector3::new(0.6, 0.0, 0.0),
+    ));
     move_anim.add_track(move_track);
-    scene.get_node_mut(circle_id).unwrap()
+    scene
+        .get_node_mut(circle_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(move_anim, TimeValue::new(0.0)));
 
     // Star that pulses
@@ -64,22 +75,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Transform::from_translation(0.0, 0.0, 0.0),
     );
     let star = Polygon::star(5, 0.2, 0.1, Color::YELLOW);
-    scene.get_node_mut(star_id).unwrap().set_renderable(Renderable::Polygon {
-        vertices: star.vertices,
-        color: star.color,
-    });
+    scene
+        .get_node_mut(star_id)
+        .unwrap()
+        .set_renderable(Renderable::Polygon {
+            vertices: star.vertices,
+            color: star.color,
+        });
 
     // Animate star pulsing
     let mut pulse_anim = AnimationClip::new("pulse".to_string());
     let mut pulse_track = AnimationTrack::new("scale".to_string());
     pulse_track.add_keyframe(Keyframe::new(TimeValue::new(0.0), Vector3::one()));
-    pulse_track.add_keyframe(Keyframe::new(TimeValue::new(DURATION / 2.0), Vector3::new(1.5, 1.5, 1.5)));
+    pulse_track.add_keyframe(Keyframe::new(
+        TimeValue::new(DURATION / 2.0),
+        Vector3::new(1.5, 1.5, 1.5),
+    ));
     pulse_track.add_keyframe(Keyframe::new(TimeValue::new(DURATION), Vector3::one()));
     pulse_anim.add_track(pulse_track);
-    scene.get_node_mut(star_id).unwrap()
+    scene
+        .get_node_mut(star_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(pulse_anim, TimeValue::new(0.0)));
 
-    println!("✓ Created scene with {} objects", scene.get_visible_renderables().len());
+    println!(
+        "✓ Created scene with {} objects",
+        scene.get_visible_renderables().len()
+    );
 
     // ========================================================================
     // Render frames
@@ -87,18 +109,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let frames_dir = "output/video_frames";
     std::fs::create_dir_all(frames_dir)?;
 
-    println!("\nRendering {} frames at {} FPS...", (DURATION * FPS) as u32, FPS);
+    println!(
+        "\nRendering {} frames at {} FPS...",
+        (DURATION * FPS) as u32,
+        FPS
+    );
 
-    let output_texture = renderer.get_device().create_texture(&wgpu::TextureDescriptor {
-        label: Some("Output Texture"),
-        size: wgpu::Extent3d { width: WIDTH, height: HEIGHT, depth_or_array_layers: 1 },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: wgpu::TextureFormat::Rgba8Unorm,
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-        view_formats: &[],
-    });
+    let output_texture = renderer
+        .get_device()
+        .create_texture(&wgpu::TextureDescriptor {
+            label: Some("Output Texture"),
+            size: wgpu::Extent3d {
+                width: WIDTH,
+                height: HEIGHT,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats: &[],
+        });
     let output_view = output_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
     let start_time = Instant::now();
@@ -113,9 +145,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         scene.update_transforms();
 
         // Create command encoder
-        let mut encoder = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("Frame Render Encoder"),
-        });
+        let mut encoder =
+            renderer
+                .get_device()
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("Frame Render Encoder"),
+                });
 
         // Begin render pass
         let mut render_pass = renderer.begin_render_pass(&mut encoder, &output_view, None);
@@ -152,7 +187,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         drop(render_pass);
 
         // Submit command
-        renderer.get_queue().submit(std::iter::once(encoder.finish()));
+        renderer
+            .get_queue()
+            .submit(std::iter::once(encoder.finish()));
 
         // Save frame as PNG
         let frame_filename = format!("{}/frame_{:04}.png", frames_dir, frame_count);
@@ -161,7 +198,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         frame_count += 1;
         if frame_count % 10 == 0 || frame_count == total_frames {
             let progress = (frame_count as f32 / total_frames as f32) * 100.0;
-            print!("\r  Progress: {}/{} frames ({:.1}%)", frame_count, total_frames, progress);
+            print!(
+                "\r  Progress: {}/{} frames ({:.1}%)",
+                frame_count, total_frames, progress
+            );
             std::io::Write::flush(&mut std::io::stdout()).ok();
         }
     }
@@ -180,7 +220,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ========================================================================
     println!("\n");
 
-    match export_video(frames_dir, "output/animation.mp4", WIDTH, HEIGHT, FPS as u32) {
+    match export_video(
+        frames_dir,
+        "output/animation.mp4",
+        WIDTH,
+        HEIGHT,
+        FPS as u32,
+    ) {
         Ok(()) => {
             println!("\n✨ Success! Open output/animation.mp4 to view the animation.");
         }
@@ -196,7 +242,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Save a single frame to PNG
-fn save_frame_to_png(renderer: &ShapeRenderer, texture: &wgpu::Texture, width: u32, height: u32, filename: &str) {
+fn save_frame_to_png(
+    renderer: &ShapeRenderer,
+    texture: &wgpu::Texture,
+    width: u32,
+    height: u32,
+    filename: &str,
+) {
     const COPY_BYTES_PER_ROW_ALIGNMENT: u32 = 256;
     let unpadded_bytes_per_row = width * 4;
     let padded_bytes_per_row = (unpadded_bytes_per_row + COPY_BYTES_PER_ROW_ALIGNMENT - 1)
@@ -205,16 +257,21 @@ fn save_frame_to_png(renderer: &ShapeRenderer, texture: &wgpu::Texture, width: u
 
     let buffer_size = (padded_bytes_per_row * height) as wgpu::BufferAddress;
 
-    let staging_buffer = renderer.get_device().create_buffer(&wgpu::BufferDescriptor {
-        label: Some("Staging Buffer"),
-        size: buffer_size,
-        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-        mapped_at_creation: false,
-    });
+    let staging_buffer = renderer
+        .get_device()
+        .create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Staging Buffer"),
+            size: buffer_size,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
 
-    let mut encoder = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
-        label: Some("Copy Encoder"),
-    });
+    let mut encoder =
+        renderer
+            .get_device()
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Copy Encoder"),
+            });
 
     encoder.copy_texture_to_buffer(
         texture.as_image_copy(),
@@ -226,10 +283,16 @@ fn save_frame_to_png(renderer: &ShapeRenderer, texture: &wgpu::Texture, width: u
                 rows_per_image: Some(height),
             },
         },
-        wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
     );
 
-    renderer.get_queue().submit(std::iter::once(encoder.finish()));
+    renderer
+        .get_queue()
+        .submit(std::iter::once(encoder.finish()));
 
     let buffer_slice = staging_buffer.slice(..);
     let (tx, rx) = std::sync::mpsc::channel();

@@ -6,7 +6,7 @@ use std::any::Any;
 pub trait Animatable: Clone + Send + Sync + 'static {
     /// Linear interpolation between self and other at time t (0.0 to 1.0)
     fn lerp(&self, other: &Self, t: f32) -> Self;
-    
+
     /// Return a default/zero value for this type
     fn default_value() -> Self;
 }
@@ -20,7 +20,7 @@ impl Animatable for crate::core::Vector3 {
             z: self.z + (other.z - self.z) * t,
         }
     }
-    
+
     fn default_value() -> Self {
         Self::new(0.0, 0.0, 0.0)
     }
@@ -36,7 +36,7 @@ impl Animatable for crate::core::Color {
             a: self.a + (other.a - self.a) * t,
         }
     }
-    
+
     fn default_value() -> Self {
         Self::BLACK
     }
@@ -59,7 +59,7 @@ impl<T: Animatable + std::fmt::Debug> Keyframe<T> {
             interpolation: InterpolationType::Linear,
         }
     }
-    
+
     pub fn with_interpolation(mut self, interpolation: InterpolationType) -> Self {
         self.interpolation = interpolation;
         self
@@ -81,7 +81,13 @@ impl InterpolationType {
     pub fn apply(&self, t: f32) -> f32 {
         match self {
             InterpolationType::Linear => t,
-            InterpolationType::Step => if t >= 1.0 { 1.0 } else { 0.0 },
+            InterpolationType::Step => {
+                if t >= 1.0 {
+                    1.0
+                } else {
+                    0.0
+                }
+            }
             InterpolationType::EaseIn => t * t,
             InterpolationType::EaseOut => 1.0 - (1.0 - t) * (1.0 - t),
             InterpolationType::EaseInOut => {
@@ -113,7 +119,7 @@ impl<T: Animatable + std::fmt::Debug> AnimationTrack<T> {
             default_value: default_value.clone(),
         }
     }
-    
+
     pub fn with_default_value(name: String, default_value: T) -> Self {
         Self {
             name,
@@ -121,20 +127,21 @@ impl<T: Animatable + std::fmt::Debug> AnimationTrack<T> {
             default_value,
         }
     }
-    
+
     /// Add a keyframe to this track
     pub fn add_keyframe(&mut self, keyframe: Keyframe<T>) {
         self.keyframes.push(keyframe);
         // Keep keyframes sorted by time
-        self.keyframes.sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap());
+        self.keyframes
+            .sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap());
     }
-    
+
     /// Sample the value at a given time
     pub fn sample(&self, time: TimeValue) -> T {
         if self.keyframes.is_empty() {
             return self.default_value.clone();
         }
-        
+
         // Handle edge cases
         if time <= self.keyframes[0].time {
             return self.keyframes[0].value.clone();
@@ -142,29 +149,29 @@ impl<T: Animatable + std::fmt::Debug> AnimationTrack<T> {
         if time >= self.keyframes.last().unwrap().time {
             return self.keyframes.last().unwrap().value.clone();
         }
-        
+
         // Find surrounding keyframes
         let mut i = 0;
         while i < self.keyframes.len() - 1 && self.keyframes[i + 1].time <= time {
             i += 1;
         }
-        
+
         let kf0 = &self.keyframes[i];
         let kf1 = &self.keyframes[i + 1];
-        
+
         // Calculate interpolation factor
         let duration = (kf1.time - kf0.time).seconds();
         if duration <= 0.0 {
             return kf0.value.clone();
         }
-        
+
         let t_raw = (time - kf0.time).seconds() / duration;
         let t = kf0.interpolation.apply(t_raw);
-        
+
         // Interpolate
         kf0.value.lerp(&kf1.value, t)
     }
-    
+
     /// Get the duration of this track
     pub fn duration(&self) -> TimeValue {
         if self.keyframes.is_empty() {
@@ -172,7 +179,7 @@ impl<T: Animatable + std::fmt::Debug> AnimationTrack<T> {
         }
         self.keyframes.last().unwrap().time - self.keyframes.first().unwrap().time
     }
-    
+
     /// Check if this track has any keyframes
     pub fn is_empty(&self) -> bool {
         self.keyframes.is_empty()
@@ -199,29 +206,32 @@ impl AnimationClip {
             speed: 1.0,
         }
     }
-    
+
     /// Add a track to this animation
-    pub fn add_track<T: Animatable + std::fmt::Debug + 'static>(&mut self, track: AnimationTrack<T>) {
+    pub fn add_track<T: Animatable + std::fmt::Debug + 'static>(
+        &mut self,
+        track: AnimationTrack<T>,
+    ) {
         self.tracks.push(Box::new(track));
     }
-    
+
     /// Sample the animation at a given time
     pub fn sample(&self, time: TimeValue) -> AnimationSample {
         let mut sample = AnimationSample::new();
-        
+
         for track in &self.tracks {
             track.sample_to_sample(time, &mut sample);
         }
-        
+
         sample
     }
-    
+
     /// Get the duration of this animation (longest track)
     pub fn duration(&self) -> TimeValue {
         if self.tracks.is_empty() {
             return TimeValue::new(0.0);
         }
-        
+
         self.tracks
             .iter()
             .map(|track| track.duration())
@@ -267,11 +277,9 @@ impl AnimationSample {
             values: std::collections::HashMap::new(),
         }
     }
-    
+
     pub fn get<T: 'static>(&self, name: &str) -> Option<&T> {
-        self.values
-            .get(name)
-            .and_then(|v| v.downcast_ref::<T>())
+        self.values.get(name).and_then(|v| v.downcast_ref::<T>())
     }
 }
 
@@ -292,17 +300,17 @@ impl AnimationInstance {
             current_time: TimeValue::new(0.0),
         }
     }
-    
+
     /// Update the animation to the current time
     pub fn update(&mut self, current_time: TimeValue) -> Option<AnimationSample> {
         if !self.is_playing {
             return None;
         }
-        
+
         // Calculate local time in the animation
         let mut local_time = current_time - self.start_time;
         let duration = self.clip.duration();
-        
+
         if duration > TimeValue::new(0.0) {
             if self.clip.loop_animation {
                 // Loop the animation
@@ -314,19 +322,19 @@ impl AnimationInstance {
                 local_time = duration;
             }
         }
-        
+
         self.current_time = local_time;
         Some(self.clip.sample(local_time))
     }
-    
+
     pub fn play(&mut self) {
         self.is_playing = true;
     }
-    
+
     pub fn pause(&mut self) {
         self.is_playing = false;
     }
-    
+
     pub fn stop(&mut self) {
         self.is_playing = false;
         self.current_time = TimeValue::new(0.0);

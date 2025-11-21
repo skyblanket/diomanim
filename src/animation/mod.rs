@@ -35,16 +35,16 @@
 //! clip.add_track(track);
 //! ```
 
-pub mod property;
 pub mod easing;
 pub mod effects;
+pub mod property;
 
 use crate::core::TimeValue;
 use property::{AnimationClip, AnimationInstance};
 
 // Re-export key types
-pub use property::{Keyframe, AnimationTrack, InterpolationType, AnimationSample};
 pub use effects::*;
+pub use property::{AnimationSample, AnimationTrack, InterpolationType, Keyframe};
 
 // Timer for animation control
 pub struct Timer {
@@ -115,29 +115,29 @@ impl AnimationController {
             global_time: TimeValue::new(0.0),
         }
     }
-    
+
     /// Add an animation to be managed
     pub fn add_animation(&mut self, animation: AnimationInstance) {
         self.animations.push(animation);
     }
-    
+
     /// Update all animations to the current global time
     pub fn update(&mut self, delta_time: TimeValue) {
         self.global_time = self.global_time + delta_time;
-        
+
         // Update all animations and remove finished ones
         self.animations.retain_mut(|anim| {
             anim.update(self.global_time);
             anim.is_playing
         });
     }
-    
+
     /// Play a new animation
     pub fn play(&mut self, clip: AnimationClip) {
         let instance = AnimationInstance::new(clip, self.global_time);
         self.add_animation(instance);
     }
-    
+
     /// Get the current global time
     pub fn global_time(&self) -> TimeValue {
         self.global_time

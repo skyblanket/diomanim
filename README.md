@@ -3,7 +3,7 @@
 [![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://rust-lang.org)
 [![WebGPU](https://img.shields.io/badge/WebGPU-wgpu%2027-blue.svg)](https://wgpu.rs)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-46%20passing-brightgreen.svg)](#)
+[![Tests](https://img.shields.io/badge/Tests-50%20passing-brightgreen.svg)](#)
 
 **Diomanim** is a high-performance animation engine built with Rust and WebGPU. Create mathematical animations with GPU-accelerated rendering, Manim-style effects, and export to high-quality MP4 videos.
 
@@ -19,7 +19,7 @@ Real-world benchmarks on 1920x1080 resolution with 10 objects:
 | **Frame Time** | **1.81ms** (target: 16.67ms @ 60 FPS) |
 | **Realtime Speedup** | **9.2x faster** than realtime |
 | **Memory Usage** | **~50-100 MB** |
-| **Tests Passing** | **46/46** ✅ |
+| **Tests Passing** | **50/50** ✅ |
 
 **Performance Rating:** ⚡ **EXCELLENT - Real-time capable**
 
@@ -29,10 +29,12 @@ Real-world benchmarks on 1920x1080 resolution with 10 objects:
 
 ### 🎬 **Core Animation System**
 - ✅ **Keyframe animation** - Property-based animation tracks
-- ✅ **Animation effects** - FadeIn, FadeOut, Create, Uncreate
+- ✅ **Phase 1 effects** - FadeIn, FadeOut, Create, Uncreate, Grow, Shrink
+- ✅ **Phase 2 effects** - MoveTo, Shift, Rotate, Spin, Transform (NEW!)
 - ✅ **Transform animations** - Position, rotation, scale
 - ✅ **Easing functions** - Linear, EaseIn, EaseOut, EaseInOut
 - ✅ **Opacity blending** - Full alpha channel support
+- ✅ **Combined animations** - Multiple animations per object
 
 ### 🎨 **Shape Rendering**
 - ✅ **Circle** - GPU-accelerated circle rendering
@@ -90,6 +92,9 @@ cargo run --release --example video_export_demo
 
 # Comprehensive showcase (all features)
 cargo run --release --example showcase
+
+# Phase 2 animation demo (MoveTo, Rotate, Spin, Transform)
+cargo run --release --example phase2_demo
 
 # Performance benchmark
 cargo run --release --example benchmark
@@ -223,6 +228,40 @@ let shrink = effects::shrink_to_center(2.0);
 let fade_in_out = effects::fade_in_out(1.0, 2.0, 1.0);
 ```
 
+### Phase 2 Motion Effects
+```rust
+// Move to a specific position
+let move_anim = effects::move_to(
+    Vector3::new(-1.0, 0.0, 0.0),  // from
+    Vector3::new(1.0, 0.0, 0.0),   // to
+    2.0                             // duration
+);
+
+// Rotate to a specific angle
+let rotate_anim = effects::rotate(
+    0.0,                           // from angle
+    std::f32::consts::PI,          // to angle (180°)
+    1.5                            // duration
+);
+
+// Spin continuously
+let spin_anim = effects::spin(
+    3.0,  // number of full rotations
+    4.0   // duration
+);
+
+// Combined transform (position + scale + rotation)
+let transform_anim = effects::transform(
+    Vector3::zero(),               // from position
+    Vector3::new(1.0, 1.0, 0.0),  // to position
+    Vector3::one(),                // from scale
+    Vector3::new(2.0, 2.0, 1.0),  // to scale
+    0.0,                           // from rotation
+    std::f32::consts::PI * 2.0,   // to rotation (360°)
+    3.0                            // duration
+);
+```
+
 ### Custom Animations
 ```rust
 use diomanim::animation::property::{AnimationClip, AnimationTrack, Keyframe};
@@ -290,10 +329,10 @@ cargo test test_name
 ```
 
 **Current Test Coverage:**
-- ✅ 46 unit tests passing
+- ✅ 50 unit tests passing
 - ✅ 8 doc tests passing
 - ✅ Integration tests for all shape types
-- ✅ Animation system tests
+- ✅ Animation system tests (Phase 1 & Phase 2)
 - ✅ Scene graph tests
 - ✅ Transform inheritance tests
 
@@ -352,15 +391,21 @@ cargo clippy -- -D warnings
 - [x] PNG frame export
 - [x] MP4 video export
 
-### 🚀 Phase 2 - Advanced Features (Future)
+### 🚀 Phase 2 - Advanced Animations (COMPLETE)
+- [x] MoveTo - Position animations
+- [x] Rotate - Rotation animations
+- [x] Spin - Continuous rotation
+- [x] Transform - Combined position/scale/rotation
+- [x] Shift - Offset movement
+
+### 🎯 Phase 3 - Advanced Features (Future)
 - [ ] Text rendering (fonts, LaTeX)
-- [ ] More animation types (Transform, Rotate, MoveTo)
 - [ ] Real-time preview window
 - [ ] Camera animations
 - [ ] 3D rendering support
 - [ ] Particle systems
 
-### 🌟 Phase 3 - Editor & Tools (Future)
+### 🌟 Phase 4 - Editor & Tools (Future)
 - [ ] GUI editor with timeline
 - [ ] Interactive preview
 - [ ] Visual keyframe editing
@@ -421,7 +466,7 @@ You are free to:
 ### For Developers
 - 🦀 **Rust** - Memory safety, zero-cost abstractions
 - 🚀 **WebGPU** - Modern, cross-platform GPU API
-- 🧪 **Well-tested** - 46 tests, all passing
+- 🧪 **Well-tested** - 50 tests, all passing
 - 📦 **Clean architecture** - Easy to extend
 
 ### For Educators

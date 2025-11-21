@@ -1,8 +1,8 @@
 //! Simple Shapes Test - Test each shape type individually
 
 use diomanim::prelude::*;
-use diomanim::scene::{SceneGraph, Renderable};
 use diomanim::render::ShapeRenderer;
+use diomanim::scene::{Renderable, SceneGraph};
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
@@ -22,11 +22,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "BigCircle".to_string(),
             Transform::from_translation(0.0, 0.0, 0.0),
         );
-        scene.get_node_mut(circle_id).unwrap().set_renderable(Renderable::Circle {
-            radius: 0.3,
-            color: Color::RED,
-        });
-    }).await?;
+        scene
+            .get_node_mut(circle_id)
+            .unwrap()
+            .set_renderable(Renderable::Circle {
+                radius: 0.3,
+                color: Color::RED,
+            });
+    })
+    .await?;
 
     // Test 2: Circle at top
     println!("Test 2: Blue circle at top (0, 0.5)");
@@ -35,11 +39,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "TopCircle".to_string(),
             Transform::from_translation(0.0, 0.5, 0.0),
         );
-        scene.get_node_mut(circle_id).unwrap().set_renderable(Renderable::Circle {
-            radius: 0.2,
-            color: Color::BLUE,
-        });
-    }).await?;
+        scene
+            .get_node_mut(circle_id)
+            .unwrap()
+            .set_renderable(Renderable::Circle {
+                radius: 0.2,
+                color: Color::BLUE,
+            });
+    })
+    .await?;
 
     // Test 3: Rectangle at center
     println!("Test 3: Green rectangle at center");
@@ -48,12 +56,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "Rect".to_string(),
             Transform::from_translation(0.0, 0.0, 0.0),
         );
-        scene.get_node_mut(rect_id).unwrap().set_renderable(Renderable::Rectangle {
-            width: 0.4,
-            height: 0.3,
-            color: Color::GREEN,
-        });
-    }).await?;
+        scene
+            .get_node_mut(rect_id)
+            .unwrap()
+            .set_renderable(Renderable::Rectangle {
+                width: 0.4,
+                height: 0.3,
+                color: Color::GREEN,
+            });
+    })
+    .await?;
 
     // Test 4: Polygon at center
     println!("Test 4: Yellow star at center");
@@ -63,11 +75,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Transform::from_translation(0.0, 0.0, 0.0),
         );
         let star = diomanim::mobjects::Polygon::star(5, 0.3, 0.15, Color::YELLOW);
-        scene.get_node_mut(star_id).unwrap().set_renderable(Renderable::Polygon {
-            vertices: star.vertices,
-            color: star.color,
-        });
-    }).await?;
+        scene
+            .get_node_mut(star_id)
+            .unwrap()
+            .set_renderable(Renderable::Polygon {
+                vertices: star.vertices,
+                color: star.color,
+            });
+    })
+    .await?;
 
     println!("\n✅ All tests complete!");
     println!("Check output/*.png files");
@@ -88,22 +104,31 @@ where
     scene.update_transforms();
 
     // Create output texture
-    let output_texture = renderer.get_device().create_texture(&wgpu::TextureDescriptor {
-        label: Some("Output Texture"),
-        size: wgpu::Extent3d { width: WIDTH, height: HEIGHT, depth_or_array_layers: 1 },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: wgpu::TextureFormat::Rgba8Unorm,
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-        view_formats: &[],
-    });
+    let output_texture = renderer
+        .get_device()
+        .create_texture(&wgpu::TextureDescriptor {
+            label: Some("Output Texture"),
+            size: wgpu::Extent3d {
+                width: WIDTH,
+                height: HEIGHT,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats: &[],
+        });
     let output_view = output_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
     // Render
-    let mut encoder = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
-        label: Some("Render Encoder"),
-    });
+    let mut encoder =
+        renderer
+            .get_device()
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Render Encoder"),
+            });
 
     let mut render_pass = renderer.begin_render_pass(&mut encoder, &output_view, None);
     render_pass.set_pipeline(renderer.get_pipeline());
@@ -127,7 +152,11 @@ where
                 };
                 renderer.draw_circle(&circle, apply_opacity(color), &mut render_pass);
             }
-            Renderable::Rectangle { width, height, color } => {
+            Renderable::Rectangle {
+                width,
+                height,
+                color,
+            } => {
                 renderer.draw_rectangle(width, height, apply_opacity(color), &mut render_pass);
             }
             Renderable::Polygon { vertices, color } => {
@@ -138,16 +167,30 @@ where
     }
 
     drop(render_pass);
-    renderer.get_queue().submit(std::iter::once(encoder.finish()));
+    renderer
+        .get_queue()
+        .submit(std::iter::once(encoder.finish()));
 
     // Save to PNG
-    save_texture_to_png(renderer, &output_texture, WIDTH, HEIGHT, &format!("output/{}", filename));
+    save_texture_to_png(
+        renderer,
+        &output_texture,
+        WIDTH,
+        HEIGHT,
+        &format!("output/{}", filename),
+    );
     println!("  ✓ Saved to output/{}", filename);
 
     Ok(())
 }
 
-fn save_texture_to_png(renderer: &ShapeRenderer, texture: &wgpu::Texture, width: u32, height: u32, filename: &str) {
+fn save_texture_to_png(
+    renderer: &ShapeRenderer,
+    texture: &wgpu::Texture,
+    width: u32,
+    height: u32,
+    filename: &str,
+) {
     // Calculate aligned bytes per row (must be multiple of 256)
     const COPY_BYTES_PER_ROW_ALIGNMENT: u32 = 256;
     let unpadded_bytes_per_row = width * 4;
@@ -157,16 +200,21 @@ fn save_texture_to_png(renderer: &ShapeRenderer, texture: &wgpu::Texture, width:
 
     let buffer_size = (padded_bytes_per_row * height) as wgpu::BufferAddress;
 
-    let staging_buffer = renderer.get_device().create_buffer(&wgpu::BufferDescriptor {
-        label: Some("Staging Buffer"),
-        size: buffer_size,
-        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-        mapped_at_creation: false,
-    });
+    let staging_buffer = renderer
+        .get_device()
+        .create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Staging Buffer"),
+            size: buffer_size,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
 
-    let mut encoder = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
-        label: Some("Copy Encoder"),
-    });
+    let mut encoder =
+        renderer
+            .get_device()
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Copy Encoder"),
+            });
 
     encoder.copy_texture_to_buffer(
         texture.as_image_copy(),
@@ -178,10 +226,16 @@ fn save_texture_to_png(renderer: &ShapeRenderer, texture: &wgpu::Texture, width:
                 rows_per_image: Some(height),
             },
         },
-        wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
     );
 
-    renderer.get_queue().submit(std::iter::once(encoder.finish()));
+    renderer
+        .get_queue()
+        .submit(std::iter::once(encoder.finish()));
 
     let buffer_slice = staging_buffer.slice(..);
     let (tx, rx) = std::sync::mpsc::channel();

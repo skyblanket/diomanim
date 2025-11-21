@@ -6,9 +6,9 @@
 //! - Applying a simple animation
 //! - Rendering to an image file
 
-use diomanim::prelude::*;
 use diomanim::animation::property::{AnimationClip, AnimationTrack, Keyframe};
-use diomanim::scene::{SceneGraph, Renderable};
+use diomanim::prelude::*;
+use diomanim::scene::{Renderable, SceneGraph};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -66,20 +66,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ));
 
     // Create output texture
-    let output_texture = renderer.get_device().create_texture(&wgpu::TextureDescriptor {
-        label: Some("Output Texture"),
-        size: wgpu::Extent3d {
-            width: 800,
-            height: 600,
-            depth_or_array_layers: 1,
-        },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: wgpu::TextureFormat::Rgba8Unorm,
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-        view_formats: &[],
-    });
+    let output_texture = renderer
+        .get_device()
+        .create_texture(&wgpu::TextureDescriptor {
+            label: Some("Output Texture"),
+            size: wgpu::Extent3d {
+                width: 800,
+                height: 600,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats: &[],
+        });
     let output_view = output_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
     println!("\nRendering frame at t=1.0s (maximum scale)...");
@@ -94,9 +96,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         renderer.update_transform(&transform_uniform);
 
         // Apply opacity to color
-        let apply_opacity = |color: Color| -> Color {
-            Color::rgba(color.r, color.g, color.b, color.a * opacity)
-        };
+        let apply_opacity =
+            |color: Color| -> Color { Color::rgba(color.r, color.g, color.b, color.a * opacity) };
 
         if let Some((radius, color)) = renderable.as_circle() {
             let circle = diomanim::mobjects::Circle {

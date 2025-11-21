@@ -9,7 +9,9 @@ pub struct TimeValue {
 
 impl TimeValue {
     pub fn new(value: f32) -> Self {
-        Self { value: value.max(0.0) }
+        Self {
+            value: value.max(0.0),
+        }
     }
 
     pub fn seconds(&self) -> f32 {
@@ -58,7 +60,8 @@ impl Timer {
         if self.is_running {
             if let Some(start) = self.start_time {
                 let delta = Instant::now() - start;
-                self.elapsed = TimeValue::new(self.elapsed.value + delta.as_secs_f32() * self.speed);
+                self.elapsed =
+                    TimeValue::new(self.elapsed.value + delta.as_secs_f32() * self.speed);
             }
             self.is_running = false;
         }
@@ -77,7 +80,7 @@ impl Timer {
 
     pub fn update(&mut self) -> f32 {
         let old_elapsed = self.elapsed.value;
-        
+
         if self.is_running {
             if let Some(start) = self.start_time {
                 let delta = Instant::now() - start;
@@ -210,7 +213,10 @@ pub struct WaveRate {
 
 impl WaveRate {
     pub fn new(amplitude: f32, frequency: f32) -> Self {
-        Self { amplitude, frequency }
+        Self {
+            amplitude,
+            frequency,
+        }
     }
 }
 
@@ -295,7 +301,8 @@ impl Timeline {
 
     pub fn add_marker(&mut self, name: String, time: TimeValue) {
         self.markers.push((name, time));
-        self.markers.sort_by(|a, b| a.1.value.partial_cmp(&b.1.value).unwrap());
+        self.markers
+            .sort_by(|a, b| a.1.value.partial_cmp(&b.1.value).unwrap());
     }
 
     pub fn add_marker_at_seconds(&mut self, name: String, seconds: f32) {
@@ -363,13 +370,15 @@ impl PartialOrd for TimeValue {
 
 impl Ord for TimeValue {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.value.partial_cmp(&other.value).unwrap_or(std::cmp::Ordering::Equal)
+        self.value
+            .partial_cmp(&other.value)
+            .unwrap_or(std::cmp::Ordering::Equal)
     }
 }
 
 impl std::ops::Add for TimeValue {
     type Output = Self;
-    
+
     fn add(self, other: Self) -> Self {
         Self::new(self.value + other.value)
     }
@@ -377,7 +386,7 @@ impl std::ops::Add for TimeValue {
 
 impl std::ops::Sub for TimeValue {
     type Output = Self;
-    
+
     fn sub(self, other: Self) -> Self {
         Self::new(self.value - other.value)
     }
@@ -397,7 +406,7 @@ impl std::ops::SubAssign for TimeValue {
 
 impl std::ops::Rem for TimeValue {
     type Output = Self;
-    
+
     fn rem(self, other: Self) -> Self {
         if other.value == 0.0 {
             Self::new(0.0)

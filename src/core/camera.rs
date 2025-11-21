@@ -1,4 +1,4 @@
-use crate::core::{Vector3, Transform, Matrix4};
+use crate::core::{Matrix4, Transform, Vector3};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
@@ -132,7 +132,13 @@ impl Camera {
         self.transform.rotation.rotate_vector(Vector3::up())
     }
 
-    pub fn screen_point_to_ray(&self, screen_x: f32, screen_y: f32, screen_width: f32, screen_height: f32) -> (Vector3, Vector3) {
+    pub fn screen_point_to_ray(
+        &self,
+        screen_x: f32,
+        screen_y: f32,
+        screen_width: f32,
+        screen_height: f32,
+    ) -> (Vector3, Vector3) {
         let x = (2.0 * screen_x / screen_width - 1.0) * self.aspect_ratio;
         let y = 1.0 - 2.0 * screen_y / screen_height;
 
@@ -140,26 +146,31 @@ impl Camera {
         let direction = if self.orthographic {
             let world_x = x * self.orthographic_size * self.aspect_ratio;
             let world_y = y * self.orthographic_size;
-            
+
             let right = self.right() * world_x;
             let up = self.up() * world_y;
-            
+
             (self.forward() + right + up).normalized()
         } else {
             let tan_fov = (self.fov * 0.5).tan();
             let dir_x = x * tan_fov * self.aspect_ratio;
             let dir_y = y * tan_fov;
-            
+
             let right = self.right() * dir_x;
             let up = self.up() * dir_y;
-            
+
             (self.forward() + right + up).normalized()
         };
 
         (origin, direction)
     }
 
-    pub fn world_to_screen_point(&self, world_pos: Vector3, screen_width: f32, screen_height: f32) -> Option<(f32, f32)> {
+    pub fn world_to_screen_point(
+        &self,
+        world_pos: Vector3,
+        screen_width: f32,
+        screen_height: f32,
+    ) -> Option<(f32, f32)> {
         let view_proj = self.projection_matrix().mul(&self.view_matrix());
         let pos = view_proj.transform_point(world_pos);
 
@@ -173,10 +184,16 @@ impl Camera {
         Some((screen_x, screen_y))
     }
 
-    pub fn orbit_around(&mut self, target: Vector3, delta_yaw: f32, delta_pitch: f32, delta_zoom: f32) {
+    pub fn orbit_around(
+        &mut self,
+        target: Vector3,
+        delta_yaw: f32,
+        delta_pitch: f32,
+        delta_zoom: f32,
+    ) {
         let to_target = target - self.transform.position;
         let distance = to_target.length();
-        
+
         if distance < 0.001 {
             return;
         }
@@ -189,10 +206,10 @@ impl Camera {
 
         let yaw_rotation = crate::core::Quaternion::from_axis_angle(up, delta_yaw);
         let pitch_rotation = crate::core::Quaternion::from_axis_angle(right, delta_pitch);
-        
+
         let new_direction = pitch_rotation.rotate_vector(yaw_rotation.rotate_vector(direction));
         self.transform.position = target - new_direction * new_distance;
-        
+
         self.transform.look_at(target, Vector3::up());
     }
 

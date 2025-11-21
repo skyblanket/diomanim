@@ -28,14 +28,14 @@
 //! transform.scale = Vector3::new(2.0, 2.0, 1.0);
 //! ```
 
-pub mod vector;
-pub mod color;
-pub mod transform;
-pub mod time;
 pub mod camera;
+pub mod color;
+pub mod time;
+pub mod transform;
+pub mod vector;
 
-pub use vector::*;
-pub use color::*;
-pub use transform::*;
-pub use time::*;
 pub use camera::*;
+pub use color::*;
+pub use time::*;
+pub use transform::*;
+pub use vector::*;

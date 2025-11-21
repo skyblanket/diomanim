@@ -9,13 +9,15 @@
 //!
 //! This is the definitive example showing diomanim's capabilities.
 
-use diomanim::prelude::*;
-use diomanim::animation::property::{AnimationClip, AnimationTrack, AnimationInstance, Keyframe, InterpolationType};
 use diomanim::animation::effects;
-use diomanim::scene::{SceneGraph, Renderable};
-use diomanim::mobjects::Polygon;
-use diomanim::render::ShapeRenderer;
+use diomanim::animation::property::{
+    AnimationClip, AnimationInstance, AnimationTrack, InterpolationType, Keyframe,
+};
 use diomanim::export::export_video;
+use diomanim::mobjects::Polygon;
+use diomanim::prelude::*;
+use diomanim::render::ShapeRenderer;
+use diomanim::scene::{Renderable, SceneGraph};
 use std::time::Instant;
 
 const WIDTH: u32 = 1920;
@@ -55,12 +57,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Title_Circle".to_string(),
         Transform::from_translation(0.0, 0.3, 0.0),
     );
-    scene.get_node_mut(title_circle_id).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.25,
-        color: Color::from_hex("#FF6B6B"),
-    });
+    scene
+        .get_node_mut(title_circle_id)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.25,
+            color: Color::from_hex("#FF6B6B"),
+        });
     let fade_in = effects::fade_in(1.0);
-    scene.get_node_mut(title_circle_id).unwrap()
+    scene
+        .get_node_mut(title_circle_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(fade_in, TimeValue::new(0.0)));
 
     // ========================================================================
@@ -73,12 +80,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Circle_Shape".to_string(),
         Transform::from_translation(-0.5, -0.2, 0.0),
     );
-    scene.get_node_mut(shape1_id).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.15,
-        color: Color::from_hex("#4ECDC4"),
-    });
+    scene
+        .get_node_mut(shape1_id)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.15,
+            color: Color::from_hex("#4ECDC4"),
+        });
     let create1 = effects::create(0.8);
-    scene.get_node_mut(shape1_id).unwrap()
+    scene
+        .get_node_mut(shape1_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(create1, TimeValue::new(1.0)));
 
     // Rectangle (center-left)
@@ -86,13 +98,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Rectangle_Shape".to_string(),
         Transform::from_translation(-0.15, -0.2, 0.0),
     );
-    scene.get_node_mut(shape2_id).unwrap().set_renderable(Renderable::Rectangle {
-        width: 0.3,
-        height: 0.3,
-        color: Color::from_hex("#95E1D3"),
-    });
+    scene
+        .get_node_mut(shape2_id)
+        .unwrap()
+        .set_renderable(Renderable::Rectangle {
+            width: 0.3,
+            height: 0.3,
+            color: Color::from_hex("#95E1D3"),
+        });
     let create2 = effects::create(0.8);
-    scene.get_node_mut(shape2_id).unwrap()
+    scene
+        .get_node_mut(shape2_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(create2, TimeValue::new(1.2)));
 
     // Pentagon (center-right)
@@ -101,12 +118,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Transform::from_translation(0.15, -0.2, 0.0),
     );
     let pentagon = Polygon::regular(5, 0.15, Color::from_hex("#F38181"));
-    scene.get_node_mut(shape3_id).unwrap().set_renderable(Renderable::Polygon {
-        vertices: pentagon.vertices,
-        color: pentagon.color,
-    });
+    scene
+        .get_node_mut(shape3_id)
+        .unwrap()
+        .set_renderable(Renderable::Polygon {
+            vertices: pentagon.vertices,
+            color: pentagon.color,
+        });
     let create3 = effects::create(0.8);
-    scene.get_node_mut(shape3_id).unwrap()
+    scene
+        .get_node_mut(shape3_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(create3, TimeValue::new(1.4)));
 
     // Star (right)
@@ -115,12 +137,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Transform::from_translation(0.5, -0.2, 0.0),
     );
     let star = Polygon::star(5, 0.15, 0.07, Color::from_hex("#FFC947"));
-    scene.get_node_mut(shape4_id).unwrap().set_renderable(Renderable::Polygon {
-        vertices: star.vertices,
-        color: star.color,
-    });
+    scene
+        .get_node_mut(shape4_id)
+        .unwrap()
+        .set_renderable(Renderable::Polygon {
+            vertices: star.vertices,
+            color: star.color,
+        });
     let create4 = effects::create(0.8);
-    scene.get_node_mut(shape4_id).unwrap()
+    scene
+        .get_node_mut(shape4_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(create4, TimeValue::new(1.6)));
 
     // ========================================================================
@@ -133,10 +160,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Mover1".to_string(),
         Transform::from_translation(-0.7, 0.5, 0.0),
     );
-    scene.get_node_mut(mover1_id).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.1,
-        color: Color::from_hex("#A8E6CF"),
-    });
+    scene
+        .get_node_mut(mover1_id)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.1,
+            color: Color::from_hex("#A8E6CF"),
+        });
 
     let mut move_anim1 = AnimationClip::new("move1".to_string());
     let mut move_track1 = AnimationTrack::new("position".to_string());
@@ -147,7 +177,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     move_track1.add_keyframe(kf1);
     move_track1.add_keyframe(kf2);
     move_anim1.add_track(move_track1);
-    scene.get_node_mut(mover1_id).unwrap()
+    scene
+        .get_node_mut(mover1_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(move_anim1, TimeValue::new(0.0)));
 
     // Pulsing star
@@ -156,18 +188,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Transform::from_translation(0.0, 0.5, 0.0),
     );
     let pulser_star = Polygon::star(6, 0.12, 0.06, Color::from_hex("#FFD93D"));
-    scene.get_node_mut(pulser_id).unwrap().set_renderable(Renderable::Polygon {
-        vertices: pulser_star.vertices,
-        color: pulser_star.color,
-    });
+    scene
+        .get_node_mut(pulser_id)
+        .unwrap()
+        .set_renderable(Renderable::Polygon {
+            vertices: pulser_star.vertices,
+            color: pulser_star.color,
+        });
 
     let mut pulse_anim = AnimationClip::new("pulse".to_string());
     let mut pulse_track = AnimationTrack::new("scale".to_string());
     pulse_track.add_keyframe(Keyframe::new(TimeValue::new(2.0), Vector3::one()));
-    pulse_track.add_keyframe(Keyframe::new(TimeValue::new(3.0), Vector3::new(1.5, 1.5, 1.5)));
+    pulse_track.add_keyframe(Keyframe::new(
+        TimeValue::new(3.0),
+        Vector3::new(1.5, 1.5, 1.5),
+    ));
     pulse_track.add_keyframe(Keyframe::new(TimeValue::new(4.0), Vector3::one()));
     pulse_anim.add_track(pulse_track);
-    scene.get_node_mut(pulser_id).unwrap()
+    scene
+        .get_node_mut(pulser_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(pulse_anim, TimeValue::new(0.0)));
 
     // ========================================================================
@@ -176,9 +216,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Act 4: Finale with FadeOut");
 
     // Add fade-out to all objects
-    for node_id in [title_circle_id, shape1_id, shape2_id, shape3_id, shape4_id, mover1_id, pulser_id] {
+    for node_id in [
+        title_circle_id,
+        shape1_id,
+        shape2_id,
+        shape3_id,
+        shape4_id,
+        mover1_id,
+        pulser_id,
+    ] {
         let fade_out = effects::fade_out(1.0);
-        scene.get_node_mut(node_id).unwrap()
+        scene
+            .get_node_mut(node_id)
+            .unwrap()
             .add_animation(AnimationInstance::new(fade_out, TimeValue::new(4.0)));
     }
 
@@ -195,19 +245,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let frames_dir = "output/showcase_frames";
     std::fs::create_dir_all(frames_dir)?;
 
-    println!("Rendering animation ({} seconds at {} FPS)...", DURATION, FPS);
+    println!(
+        "Rendering animation ({} seconds at {} FPS)...",
+        DURATION, FPS
+    );
     let total_frames = (DURATION * FPS) as u32;
 
-    let output_texture = renderer.get_device().create_texture(&wgpu::TextureDescriptor {
-        label: Some("Output Texture"),
-        size: wgpu::Extent3d { width: WIDTH, height: HEIGHT, depth_or_array_layers: 1 },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: wgpu::TextureFormat::Rgba8Unorm,
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-        view_formats: &[],
-    });
+    let output_texture = renderer
+        .get_device()
+        .create_texture(&wgpu::TextureDescriptor {
+            label: Some("Output Texture"),
+            size: wgpu::Extent3d {
+                width: WIDTH,
+                height: HEIGHT,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats: &[],
+        });
     let output_view = output_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
     let start_time = Instant::now();
@@ -221,9 +280,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         scene.update_transforms();
 
         // Create command encoder
-        let mut encoder = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("Frame Encoder"),
-        });
+        let mut encoder =
+            renderer
+                .get_device()
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("Frame Encoder"),
+                });
 
         // Begin render pass
         let mut render_pass = renderer.begin_render_pass(&mut encoder, &output_view, None);
@@ -248,7 +310,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     };
                     renderer.draw_circle(&circle, apply_opacity(color), &mut render_pass);
                 }
-                Renderable::Rectangle { width, height, color } => {
+                Renderable::Rectangle {
+                    width,
+                    height,
+                    color,
+                } => {
                     renderer.draw_rectangle(width, height, apply_opacity(color), &mut render_pass);
                 }
                 Renderable::Polygon { vertices, color } => {
@@ -259,7 +325,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         drop(render_pass);
-        renderer.get_queue().submit(std::iter::once(encoder.finish()));
+        renderer
+            .get_queue()
+            .submit(std::iter::once(encoder.finish()));
 
         // Save frame
         let frame_filename = format!("{}/frame_{:04}.png", frames_dir, frame_count);
@@ -269,8 +337,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if frame_count % 30 == 0 || frame_count == total_frames {
             let progress = (frame_count as f32 / total_frames as f32) * 100.0;
             let current_time = frame_count as f32 / FPS;
-            print!("\r  Progress: {}/{} frames ({:.1}%) - {:.1}s/{:.1}s",
-                   frame_count, total_frames, progress, current_time, DURATION);
+            print!(
+                "\r  Progress: {}/{} frames ({:.1}%) - {:.1}s/{:.1}s",
+                frame_count, total_frames, progress, current_time, DURATION
+            );
             std::io::Write::flush(&mut std::io::stdout()).ok();
         }
     }
@@ -313,22 +383,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn save_frame(renderer: &ShapeRenderer, texture: &wgpu::Texture, width: u32, height: u32, filename: &str) {
+fn save_frame(
+    renderer: &ShapeRenderer,
+    texture: &wgpu::Texture,
+    width: u32,
+    height: u32,
+    filename: &str,
+) {
     const ALIGNMENT: u32 = 256;
     let unpadded_bpr = width * 4;
     let padded_bpr = (unpadded_bpr + ALIGNMENT - 1) / ALIGNMENT * ALIGNMENT;
     let buffer_size = (padded_bpr * height) as wgpu::BufferAddress;
 
-    let staging_buffer = renderer.get_device().create_buffer(&wgpu::BufferDescriptor {
-        label: Some("Staging"),
-        size: buffer_size,
-        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-        mapped_at_creation: false,
-    });
+    let staging_buffer = renderer
+        .get_device()
+        .create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Staging"),
+            size: buffer_size,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
 
-    let mut encoder = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor {
-        label: Some("Copy"),
-    });
+    let mut encoder =
+        renderer
+            .get_device()
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Copy"),
+            });
 
     encoder.copy_texture_to_buffer(
         texture.as_image_copy(),
@@ -340,21 +421,32 @@ fn save_frame(renderer: &ShapeRenderer, texture: &wgpu::Texture, width: u32, hei
                 rows_per_image: Some(height),
             },
         },
-        wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
     );
 
-    renderer.get_queue().submit(std::iter::once(encoder.finish()));
+    renderer
+        .get_queue()
+        .submit(std::iter::once(encoder.finish()));
 
     let buffer_slice = staging_buffer.slice(..);
     let (tx, rx) = std::sync::mpsc::channel();
-    buffer_slice.map_async(wgpu::MapMode::Read, move |r| { tx.send(r).unwrap(); });
+    buffer_slice.map_async(wgpu::MapMode::Read, move |r| {
+        tx.send(r).unwrap();
+    });
 
     loop {
         match rx.try_recv() {
             Ok(Ok(())) => break,
             Ok(Err(e)) => panic!("Mapping failed: {:?}", e),
             Err(std::sync::mpsc::TryRecvError::Empty) => {
-                let _ = renderer.get_device().poll(wgpu::PollType::Wait { submission_index: None, timeout: None });
+                let _ = renderer.get_device().poll(wgpu::PollType::Wait {
+                    submission_index: None,
+                    timeout: None,
+                });
                 std::thread::yield_now();
             }
             Err(std::sync::mpsc::TryRecvError::Disconnected) => panic!("Channel disconnected"),

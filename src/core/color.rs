@@ -10,7 +10,12 @@ pub struct Color {
 
 impl Color {
     pub fn new(r: f32, g: f32, b: f32) -> Self {
-        Self { r: r.clamp(0.0, 1.0), g: g.clamp(0.0, 1.0), b: b.clamp(0.0, 1.0), a: 1.0 }
+        Self {
+            r: r.clamp(0.0, 1.0),
+            g: g.clamp(0.0, 1.0),
+            b: b.clamp(0.0, 1.0),
+            a: 1.0,
+        }
     }
 
     pub fn rgba(r: f32, g: f32, b: f32, a: f32) -> Self {
@@ -110,28 +115,128 @@ impl Default for Color {
 
 // Predefined colors
 impl Color {
-    pub const WHITE: Color = Color { r: 1.0, g: 1.0, b: 1.0, a: 1.0 };
-    pub const BLACK: Color = Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
-    pub const RED: Color = Color { r: 1.0, g: 0.0, b: 0.0, a: 1.0 };
-    pub const GREEN: Color = Color { r: 0.0, g: 1.0, b: 0.0, a: 1.0 };
-    pub const BLUE: Color = Color { r: 0.0, g: 0.0, b: 1.0, a: 1.0 };
-    pub const YELLOW: Color = Color { r: 1.0, g: 1.0, b: 0.0, a: 1.0 };
-    pub const CYAN: Color = Color { r: 0.0, g: 1.0, b: 1.0, a: 1.0 };
-    pub const MAGENTA: Color = Color { r: 1.0, g: 0.0, b: 1.0, a: 1.0 };
-    pub const GRAY: Color = Color { r: 0.5, g: 0.5, b: 0.5, a: 1.0 };
-    pub const LIGHT_GRAY: Color = Color { r: 0.75, g: 0.75, b: 0.75, a: 1.0 };
-    pub const DARK_GRAY: Color = Color { r: 0.25, g: 0.25, b: 0.25, a: 1.0 };
-    pub const ORANGE: Color = Color { r: 1.0, g: 0.5, b: 0.0, a: 1.0 };
-    pub const PURPLE: Color = Color { r: 0.5, g: 0.0, b: 1.0, a: 1.0 };
-    pub const BROWN: Color = Color { r: 0.5, g: 0.25, b: 0.0, a: 1.0 };
-    pub const PINK: Color = Color { r: 1.0, g: 0.5, b: 1.0, a: 1.0 };
-    
-    pub const TEAL: Color = Color { r: 0.0, g: 0.5, b: 0.5, a: 1.0 };
-    pub const MAROON: Color = Color { r: 0.5, g: 0.0, b: 0.0, a: 1.0 };
-    pub const GOLD: Color = Color { r: 1.0, g: 0.843, b: 0.0, a: 1.0 };
-    pub const LIME: Color = Color { r: 0.0, g: 1.0, b: 0.5, a: 1.0 };
+    pub const WHITE: Color = Color {
+        r: 1.0,
+        g: 1.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const BLACK: Color = Color {
+        r: 0.0,
+        g: 0.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const RED: Color = Color {
+        r: 1.0,
+        g: 0.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const GREEN: Color = Color {
+        r: 0.0,
+        g: 1.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const BLUE: Color = Color {
+        r: 0.0,
+        g: 0.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const YELLOW: Color = Color {
+        r: 1.0,
+        g: 1.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const CYAN: Color = Color {
+        r: 0.0,
+        g: 1.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const MAGENTA: Color = Color {
+        r: 1.0,
+        g: 0.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const GRAY: Color = Color {
+        r: 0.5,
+        g: 0.5,
+        b: 0.5,
+        a: 1.0,
+    };
+    pub const LIGHT_GRAY: Color = Color {
+        r: 0.75,
+        g: 0.75,
+        b: 0.75,
+        a: 1.0,
+    };
+    pub const DARK_GRAY: Color = Color {
+        r: 0.25,
+        g: 0.25,
+        b: 0.25,
+        a: 1.0,
+    };
+    pub const ORANGE: Color = Color {
+        r: 1.0,
+        g: 0.5,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const PURPLE: Color = Color {
+        r: 0.5,
+        g: 0.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const BROWN: Color = Color {
+        r: 0.5,
+        g: 0.25,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const PINK: Color = Color {
+        r: 1.0,
+        g: 0.5,
+        b: 1.0,
+        a: 1.0,
+    };
 
-    pub const TRANSPARENT: Color = Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 };
+    pub const TEAL: Color = Color {
+        r: 0.0,
+        g: 0.5,
+        b: 0.5,
+        a: 1.0,
+    };
+    pub const MAROON: Color = Color {
+        r: 0.5,
+        g: 0.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const GOLD: Color = Color {
+        r: 1.0,
+        g: 0.843,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const LIME: Color = Color {
+        r: 0.0,
+        g: 1.0,
+        b: 0.5,
+        a: 1.0,
+    };
+
+    pub const TRANSPARENT: Color = Color {
+        r: 0.0,
+        g: 0.0,
+        b: 0.0,
+        a: 0.0,
+    };
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -158,7 +263,7 @@ impl ColorGradient {
 
     pub fn evaluate(&self, t: f32) -> Color {
         let t = t.clamp(0.0, 1.0);
-        
+
         if self.stops.is_empty() {
             return Color::BLACK;
         }
@@ -174,7 +279,7 @@ impl ColorGradient {
         for i in 0..self.stops.len() - 1 {
             let (t0, color0) = self.stops[i];
             let (t1, color1) = self.stops[i + 1];
-            
+
             if t >= t0 && t <= t1 {
                 let local_t = (t - t0) / (t1 - t0);
                 return color0.lerp(&color1, local_t);
