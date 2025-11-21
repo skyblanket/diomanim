@@ -27,12 +27,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Circle".to_string(),
         Transform::from_translation(-0.6, 0.4, 0.0),
     );
-    scene.get_node_mut(circle_id).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.12,
-        color: Color::new(0.9, 0.2, 0.2),
-    });
+    scene
+        .get_node_mut(circle_id)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.12,
+            color: Color::new(0.9, 0.2, 0.2),
+        });
     let fade_in = effects::fade_in(1.0);
-    scene.get_node_mut(circle_id).unwrap()
+    scene
+        .get_node_mut(circle_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(fade_in, TimeValue::new(0.0)));
     println!("  ✓ Circle (red)");
 
@@ -41,13 +46,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Rectangle".to_string(),
         Transform::from_translation(-0.3, 0.4, 0.0),
     );
-    scene.get_node_mut(rect_id).unwrap().set_renderable(Renderable::Rectangle {
-        width: 0.2,
-        height: 0.15,
-        color: Color::new(0.2, 0.4, 0.9),
-    });
+    scene
+        .get_node_mut(rect_id)
+        .unwrap()
+        .set_renderable(Renderable::Rectangle {
+            width: 0.2,
+            height: 0.15,
+            color: Color::new(0.2, 0.4, 0.9),
+        });
     let fade_in = effects::fade_in(1.0);
-    scene.get_node_mut(rect_id).unwrap()
+    scene
+        .get_node_mut(rect_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(fade_in, TimeValue::new(0.2)));
     println!("  ✓ Rectangle (blue)");
 
@@ -56,13 +66,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "Square".to_string(),
         Transform::from_translation(0.0, 0.4, 0.0),
     );
-    scene.get_node_mut(square_id).unwrap().set_renderable(Renderable::Rectangle {
-        width: 0.16,
-        height: 0.16,
-        color: Color::new(0.2, 0.8, 0.4),
-    });
+    scene
+        .get_node_mut(square_id)
+        .unwrap()
+        .set_renderable(Renderable::Rectangle {
+            width: 0.16,
+            height: 0.16,
+            color: Color::new(0.2, 0.8, 0.4),
+        });
     let fade_in = effects::fade_in(1.0);
-    scene.get_node_mut(square_id).unwrap()
+    scene
+        .get_node_mut(square_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(fade_in, TimeValue::new(0.4)));
     println!("  ✓ Square (green)");
 
@@ -72,16 +87,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Transform::from_translation(0.3, 0.4, 0.0),
     );
     let triangle_vertices = vec![
-        Vector3::new(0.0, 0.1, 0.0),    // Top
-        Vector3::new(-0.1, -0.1, 0.0),  // Bottom left
-        Vector3::new(0.1, -0.1, 0.0),   // Bottom right
+        Vector3::new(0.0, 0.1, 0.0),   // Top
+        Vector3::new(-0.1, -0.1, 0.0), // Bottom left
+        Vector3::new(0.1, -0.1, 0.0),  // Bottom right
     ];
-    scene.get_node_mut(triangle_id).unwrap().set_renderable(Renderable::Polygon {
-        vertices: triangle_vertices,
-        color: Color::new(0.9, 0.7, 0.2),
-    });
+    scene
+        .get_node_mut(triangle_id)
+        .unwrap()
+        .set_renderable(Renderable::Polygon {
+            vertices: triangle_vertices,
+            color: Color::new(0.9, 0.7, 0.2),
+        });
     let fade_in = effects::fade_in(1.0);
-    scene.get_node_mut(triangle_id).unwrap()
+    scene
+        .get_node_mut(triangle_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(fade_in, TimeValue::new(0.6)));
     println!("  ✓ Triangle (yellow)");
 
@@ -97,12 +117,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Vector3::new(0.1 * angle.cos(), 0.1 * angle.sin(), 0.0)
         })
         .collect();
-    scene.get_node_mut(pentagon_id).unwrap().set_renderable(Renderable::Polygon {
-        vertices: pentagon_vertices,
-        color: Color::new(0.8, 0.3, 0.8),
-    });
+    scene
+        .get_node_mut(pentagon_id)
+        .unwrap()
+        .set_renderable(Renderable::Polygon {
+            vertices: pentagon_vertices,
+            color: Color::new(0.8, 0.3, 0.8),
+        });
     let fade_in = effects::fade_in(1.0);
-    scene.get_node_mut(pentagon_id).unwrap()
+    scene
+        .get_node_mut(pentagon_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(fade_in, TimeValue::new(0.8)));
     println!("  ✓ Pentagon (purple)");
 
@@ -110,66 +135,91 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Horizontal line
     let line1_id = scene.create_node("Line1".to_string());
-    scene.get_node_mut(line1_id).unwrap().set_renderable(Renderable::Line {
-        start: Vector3::new(-0.6, -0.1, 0.0),
-        end: Vector3::new(-0.3, -0.1, 0.0),
-        color: Color::new(0.3, 0.3, 0.3),
-        thickness: 3.0,
-    });
+    scene
+        .get_node_mut(line1_id)
+        .unwrap()
+        .set_renderable(Renderable::Line {
+            start: Vector3::new(-0.6, -0.1, 0.0),
+            end: Vector3::new(-0.3, -0.1, 0.0),
+            color: Color::new(0.3, 0.3, 0.3),
+            thickness: 3.0,
+        });
     let create = effects::create(1.0);
-    scene.get_node_mut(line1_id).unwrap()
+    scene
+        .get_node_mut(line1_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(create, TimeValue::new(1.0)));
     println!("  ✓ Horizontal Line");
 
     // Vertical line
     let line2_id = scene.create_node("Line2".to_string());
-    scene.get_node_mut(line2_id).unwrap().set_renderable(Renderable::Line {
-        start: Vector3::new(-0.15, 0.05, 0.0),
-        end: Vector3::new(-0.15, -0.25, 0.0),
-        color: Color::new(0.3, 0.3, 0.3),
-        thickness: 3.0,
-    });
+    scene
+        .get_node_mut(line2_id)
+        .unwrap()
+        .set_renderable(Renderable::Line {
+            start: Vector3::new(-0.15, 0.05, 0.0),
+            end: Vector3::new(-0.15, -0.25, 0.0),
+            color: Color::new(0.3, 0.3, 0.3),
+            thickness: 3.0,
+        });
     let create = effects::create(1.0);
-    scene.get_node_mut(line2_id).unwrap()
+    scene
+        .get_node_mut(line2_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(create, TimeValue::new(1.2)));
     println!("  ✓ Vertical Line");
 
     // Diagonal line
     let line3_id = scene.create_node("Line3".to_string());
-    scene.get_node_mut(line3_id).unwrap().set_renderable(Renderable::Line {
-        start: Vector3::new(0.0, 0.05, 0.0),
-        end: Vector3::new(0.2, -0.25, 0.0),
-        color: Color::new(0.3, 0.3, 0.3),
-        thickness: 3.0,
-    });
+    scene
+        .get_node_mut(line3_id)
+        .unwrap()
+        .set_renderable(Renderable::Line {
+            start: Vector3::new(0.0, 0.05, 0.0),
+            end: Vector3::new(0.2, -0.25, 0.0),
+            color: Color::new(0.3, 0.3, 0.3),
+            thickness: 3.0,
+        });
     let create = effects::create(1.0);
-    scene.get_node_mut(line3_id).unwrap()
+    scene
+        .get_node_mut(line3_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(create, TimeValue::new(1.4)));
     println!("  ✓ Diagonal Line");
 
     // Right arrow
     let arrow1_id = scene.create_node("Arrow1".to_string());
-    scene.get_node_mut(arrow1_id).unwrap().set_renderable(Renderable::Arrow {
-        start: Vector3::new(0.3, -0.1, 0.0),
-        end: Vector3::new(0.55, -0.1, 0.0),
-        color: Color::new(0.9, 0.3, 0.3),
-        thickness: 3.0,
-    });
+    scene
+        .get_node_mut(arrow1_id)
+        .unwrap()
+        .set_renderable(Renderable::Arrow {
+            start: Vector3::new(0.3, -0.1, 0.0),
+            end: Vector3::new(0.55, -0.1, 0.0),
+            color: Color::new(0.9, 0.3, 0.3),
+            thickness: 3.0,
+        });
     let create = effects::create(1.0);
-    scene.get_node_mut(arrow1_id).unwrap()
+    scene
+        .get_node_mut(arrow1_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(create, TimeValue::new(1.6)));
     println!("  ✓ Right Arrow");
 
     // Down arrow
     let arrow2_id = scene.create_node("Arrow2".to_string());
-    scene.get_node_mut(arrow2_id).unwrap().set_renderable(Renderable::Arrow {
-        start: Vector3::new(0.7, 0.05, 0.0),
-        end: Vector3::new(0.7, -0.25, 0.0),
-        color: Color::new(0.3, 0.7, 0.9),
-        thickness: 3.0,
-    });
+    scene
+        .get_node_mut(arrow2_id)
+        .unwrap()
+        .set_renderable(Renderable::Arrow {
+            start: Vector3::new(0.7, 0.05, 0.0),
+            end: Vector3::new(0.7, -0.25, 0.0),
+            color: Color::new(0.3, 0.7, 0.9),
+            thickness: 3.0,
+        });
     let create = effects::create(1.0);
-    scene.get_node_mut(arrow2_id).unwrap()
+    scene
+        .get_node_mut(arrow2_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(create, TimeValue::new(1.8)));
     println!("  ✓ Down Arrow");
 
@@ -187,12 +237,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Vector3::new(0.1 * angle.cos(), 0.1 * angle.sin(), 0.0)
         })
         .collect();
-    scene.get_node_mut(hexagon_id).unwrap().set_renderable(Renderable::Polygon {
-        vertices: hexagon_vertices,
-        color: Color::new(0.2, 0.9, 0.9),
-    });
+    scene
+        .get_node_mut(hexagon_id)
+        .unwrap()
+        .set_renderable(Renderable::Polygon {
+            vertices: hexagon_vertices,
+            color: Color::new(0.2, 0.9, 0.9),
+        });
     let grow = effects::grow_from_center(1.5);
-    scene.get_node_mut(hexagon_id).unwrap()
+    scene
+        .get_node_mut(hexagon_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(grow, TimeValue::new(2.0)));
     println!("  ✓ Hexagon (cyan)");
 
@@ -216,12 +271,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Vector3::new(radius * angle.cos(), radius * angle.sin(), 0.0)
         })
         .collect();
-    scene.get_node_mut(star_id).unwrap().set_renderable(Renderable::Polygon {
-        vertices: star_vertices,
-        color: Color::new(1.0, 0.8, 0.2),
-    });
+    scene
+        .get_node_mut(star_id)
+        .unwrap()
+        .set_renderable(Renderable::Polygon {
+            vertices: star_vertices,
+            color: Color::new(1.0, 0.8, 0.2),
+        });
     let grow = effects::grow_from_center(1.5);
-    scene.get_node_mut(star_id).unwrap()
+    scene
+        .get_node_mut(star_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(grow, TimeValue::new(2.2)));
     println!("  ✓ Star (gold)");
 
@@ -238,12 +298,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Vector3::new(-0.1, -0.05, 0.0),
         Vector3::new(-0.08, 0.05, 0.0),
     ];
-    scene.get_node_mut(complex_id).unwrap().set_renderable(Renderable::Polygon {
-        vertices: complex_vertices,
-        color: Color::new(0.9, 0.4, 0.6),
-    });
+    scene
+        .get_node_mut(complex_id)
+        .unwrap()
+        .set_renderable(Renderable::Polygon {
+            vertices: complex_vertices,
+            color: Color::new(0.9, 0.4, 0.6),
+        });
     let grow = effects::grow_from_center(1.5);
-    scene.get_node_mut(complex_id).unwrap()
+    scene
+        .get_node_mut(complex_id)
+        .unwrap()
         .add_animation(AnimationInstance::new(grow, TimeValue::new(2.4)));
     println!("  ✓ Complex Polygon (pink)");
 

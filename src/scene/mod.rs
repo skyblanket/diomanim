@@ -26,23 +26,28 @@
 //!
 //! let mut scene = SceneGraph::new();
 //!
-//! // Create parent
+//! // Fluent API
+//! scene.add_circle("my_circle", 1.0, Color::RED)
+//!     .at(2.0, 1.0, 0.0)
+//!     .fade_in(0.0, 1.0);
+//!
+//! // Traditional API
 //! let parent_id = scene.create_node("Parent".to_string());
-//!
-//! // Create child
 //! let child_id = scene.create_node("Child".to_string());
-//!
-//! // Establish hierarchy
 //! scene.parent(child_id, parent_id).unwrap();
 //!
 //! // Update transforms
 //! scene.update_transforms();
 //! ```
 
+pub mod builder;
+
 use crate::animation::property::AnimationInstance;
 use crate::core::{TimeValue, Transform, Vector3};
 use crate::render::TransformUniform;
 use std::collections::HashMap;
+
+pub use builder::NodeBuilder;
 
 /// Unique identifier for scene nodes
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
