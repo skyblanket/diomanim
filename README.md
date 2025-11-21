@@ -44,6 +44,16 @@ Real-world benchmarks on 1920x1080 resolution with 10 objects:
 - ✅ **Line** - Configurable thickness
 - ✅ **Arrow** - Lines with arrowheads
 
+### 📐 **Mathematical Notation (NEW!)**
+- ✅ **LaTeX syntax** - Render equations with LaTeX notation
+- ✅ **Text rendering** - GPU-accelerated TrueType font rendering
+- ✅ **Greek letters** - α, β, γ, δ, θ, λ, μ, π, σ, φ, ω
+- ✅ **Operators** - ∇, Σ, Π, ∫, ∂, ±, ×, ·, ≤, ≥, ≠, ≈, ∞
+- ✅ **Fractions** - `\frac{a}{b}`
+- ✅ **Superscripts** - `x^2`, `e^{i\pi}`
+- ✅ **Subscripts** - `x_1`, `a_n`
+- ✅ **Square roots** - `\sqrt{x}`
+
 ### 🏗️ **Scene Graph**
 - ✅ **Hierarchical nodes** - Parent-child relationships
 - ✅ **Transform inheritance** - Automatic propagation
@@ -96,9 +106,33 @@ cargo run --release --example showcase
 # Phase 2 animation demo (MoveTo, Rotate, Spin, Transform)
 cargo run --release --example phase2_demo
 
+# Mathematical notation demo (LaTeX rendering)
+cargo run --release --example math_demo
+
+# 🔥 Gradient Descent Optimization (ML Visualization)
+cargo run --release --example gradient_descent
+
 # Performance benchmark
 cargo run --release --example benchmark
 ```
+
+### 🌟 Featured Example: Gradient Descent
+
+Watch gradient descent optimization come to life with mathematical notation, animated convergence, and color-coded steps!
+
+```bash
+cargo run --release --example gradient_descent
+```
+
+**What it shows:**
+- ∇f = 2x (gradient formula in LaTeX)
+- x_{t+1} = x_t - α∇f (update rule)
+- f(x) = x² loss function curve
+- 6 optimization steps with animated arrows
+- Color gradient showing convergence (blue → green)
+- Step labels and smooth animations
+
+Perfect for ML education and algorithm visualization!
 
 ### Create Your Own Animation
 
