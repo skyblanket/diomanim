@@ -15,19 +15,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut scene = build();
     scene.update_transforms();
 
-    let tex = renderer.get_device().create_texture(&wgpu::TextureDescriptor {
-        label: None,
-        size: wgpu::Extent3d { width: WIDTH, height: HEIGHT, depth_or_array_layers: 1 },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: wgpu::TextureFormat::Rgba8Unorm,
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-        view_formats: &[],
-    });
+    let tex = renderer
+        .get_device()
+        .create_texture(&wgpu::TextureDescriptor {
+            label: None,
+            size: wgpu::Extent3d {
+                width: WIDTH,
+                height: HEIGHT,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats: &[],
+        });
     let view = tex.create_view(&wgpu::TextureViewDescriptor::default());
 
-    let mut enc = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+    let mut enc = renderer
+        .get_device()
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
     let mut pass = renderer.begin_render_pass(&mut enc, &view, None);
     pass.set_pipeline(renderer.get_pipeline());
     pass.set_bind_group(0, renderer.get_transform_bind_group(), &[]);
@@ -37,7 +45,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let a = |c: Color| Color::rgba(c.r, c.g, c.b, c.a * o);
 
         if let Some((rad, col)) = r.as_circle() {
-            let c = diomanim::mobjects::Circle { radius: *rad, color: a(*col), position: Vector3::zero() };
+            let c = diomanim::mobjects::Circle {
+                radius: *rad,
+                color: a(*col),
+                position: Vector3::zero(),
+            };
             renderer.draw_circle(&c, a(*col), &mut pass);
         } else if let Some((s, e, col, th)) = r.as_line() {
             renderer.draw_line(*s, *e, a(*col), *th, &mut pass);
@@ -52,7 +64,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     renderer.get_queue().submit(std::iter::once(enc.finish()));
 
     std::fs::create_dir_all("docs/images")?;
-    save(&renderer, &tex, WIDTH, HEIGHT, "docs/images/diomanim_showcase.png");
+    save(
+        &renderer,
+        &tex,
+        WIDTH,
+        HEIGHT,
+        "docs/images/diomanim_showcase.png",
+    );
     println!("✅ docs/images/diomanim_showcase.png");
 
     Ok(())
@@ -66,34 +84,44 @@ fn build() -> SceneGraph {
 
     // Top row - 5 circles
     let c1 = s.create_node_with_transform("C1".into(), Transform::from_translation(-0.6, 0.4, 0.0));
-    s.get_node_mut(c1).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.15,
-        color: Color::new(1.0, 0.2, 0.3),
-    });
+    s.get_node_mut(c1)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.15,
+            color: Color::new(1.0, 0.2, 0.3),
+        });
 
     let c2 = s.create_node_with_transform("C2".into(), Transform::from_translation(-0.3, 0.4, 0.0));
-    s.get_node_mut(c2).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.15,
-        color: Color::new(1.0, 0.7, 0.2),
-    });
+    s.get_node_mut(c2)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.15,
+            color: Color::new(1.0, 0.7, 0.2),
+        });
 
     let c3 = s.create_node_with_transform("C3".into(), Transform::from_translation(0.0, 0.4, 0.0));
-    s.get_node_mut(c3).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.15,
-        color: Color::new(0.3, 1.0, 0.4),
-    });
+    s.get_node_mut(c3)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.15,
+            color: Color::new(0.3, 1.0, 0.4),
+        });
 
     let c4 = s.create_node_with_transform("C4".into(), Transform::from_translation(0.3, 0.4, 0.0));
-    s.get_node_mut(c4).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.15,
-        color: Color::new(0.3, 0.6, 1.0),
-    });
+    s.get_node_mut(c4)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.15,
+            color: Color::new(0.3, 0.6, 1.0),
+        });
 
     let c5 = s.create_node_with_transform("C5".into(), Transform::from_translation(0.6, 0.4, 0.0));
-    s.get_node_mut(c5).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.15,
-        color: Color::new(0.8, 0.3, 1.0),
-    });
+    s.get_node_mut(c5)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.15,
+            color: Color::new(0.8, 0.3, 1.0),
+        });
 
     // Middle row - 7 smaller circles
     for i in 0..7 {
@@ -103,45 +131,55 @@ fn build() -> SceneGraph {
             format!("M{}", i),
             Transform::from_translation(x, 0.0, 0.0),
         );
-        s.get_node_mut(c).unwrap().set_renderable(Renderable::Circle {
-            radius: 0.1,
-            color: Color::new(0.3 + t * 0.5, 0.5 + t * 0.3, 1.0 - t * 0.4),
-        });
+        s.get_node_mut(c)
+            .unwrap()
+            .set_renderable(Renderable::Circle {
+                radius: 0.1,
+                color: Color::new(0.3 + t * 0.5, 0.5 + t * 0.3, 1.0 - t * 0.4),
+            });
     }
 
     // Lines
     let l1 = s.create_node("L1".into());
-    s.get_node_mut(l1).unwrap().set_renderable(Renderable::Line {
-        start: Vector3::new(-0.7, -0.4, 0.0),
-        end: Vector3::new(-0.2, -0.4, 0.0),
-        color: Color::new(0.6, 0.7, 1.0),
-        thickness: 0.03,
-    });
+    s.get_node_mut(l1)
+        .unwrap()
+        .set_renderable(Renderable::Line {
+            start: Vector3::new(-0.7, -0.4, 0.0),
+            end: Vector3::new(-0.2, -0.4, 0.0),
+            color: Color::new(0.6, 0.7, 1.0),
+            thickness: 0.03,
+        });
 
     let l2 = s.create_node("L2".into());
-    s.get_node_mut(l2).unwrap().set_renderable(Renderable::Line {
-        start: Vector3::new(0.2, -0.4, 0.0),
-        end: Vector3::new(0.7, -0.4, 0.0),
-        color: Color::new(0.4, 1.0, 0.7),
-        thickness: 0.03,
-    });
+    s.get_node_mut(l2)
+        .unwrap()
+        .set_renderable(Renderable::Line {
+            start: Vector3::new(0.2, -0.4, 0.0),
+            end: Vector3::new(0.7, -0.4, 0.0),
+            color: Color::new(0.4, 1.0, 0.7),
+            thickness: 0.03,
+        });
 
     // Arrows
     let a1 = s.create_node("A1".into());
-    s.get_node_mut(a1).unwrap().set_renderable(Renderable::Arrow {
-        start: Vector3::new(-0.5, -0.7, 0.0),
-        end: Vector3::new(0.0, -0.7, 0.0),
-        color: Color::new(1.0, 0.4, 0.6),
-        thickness: 0.03,
-    });
+    s.get_node_mut(a1)
+        .unwrap()
+        .set_renderable(Renderable::Arrow {
+            start: Vector3::new(-0.5, -0.7, 0.0),
+            end: Vector3::new(0.0, -0.7, 0.0),
+            color: Color::new(1.0, 0.4, 0.6),
+            thickness: 0.03,
+        });
 
     let a2 = s.create_node("A2".into());
-    s.get_node_mut(a2).unwrap().set_renderable(Renderable::Arrow {
-        start: Vector3::new(0.0, -0.7, 0.0),
-        end: Vector3::new(0.5, -0.7, 0.0),
-        color: Color::new(0.4, 1.0, 0.6),
-        thickness: 0.03,
-    });
+    s.get_node_mut(a2)
+        .unwrap()
+        .set_renderable(Renderable::Arrow {
+            start: Vector3::new(0.0, -0.7, 0.0),
+            end: Vector3::new(0.5, -0.7, 0.0),
+            color: Color::new(0.4, 1.0, 0.6),
+            thickness: 0.03,
+        });
 
     s
 }
@@ -150,14 +188,18 @@ fn save(renderer: &ShapeRenderer, texture: &wgpu::Texture, w: u32, h: u32, filen
     const A: u32 = 256;
     let u = w * 4;
     let p = (u + A - 1) / A * A;
-    let buf = renderer.get_device().create_buffer(&wgpu::BufferDescriptor {
-        label: None,
-        size: (p * h) as u64,
-        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-        mapped_at_creation: false,
-    });
+    let buf = renderer
+        .get_device()
+        .create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: (p * h) as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
 
-    let mut enc = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+    let mut enc = renderer
+        .get_device()
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
     enc.copy_texture_to_buffer(
         texture.as_image_copy(),
         wgpu::TexelCopyBufferInfo {
@@ -168,13 +210,19 @@ fn save(renderer: &ShapeRenderer, texture: &wgpu::Texture, w: u32, h: u32, filen
                 rows_per_image: Some(h),
             },
         },
-        wgpu::Extent3d { width: w, height: h, depth_or_array_layers: 1 },
+        wgpu::Extent3d {
+            width: w,
+            height: h,
+            depth_or_array_layers: 1,
+        },
     );
     renderer.get_queue().submit(std::iter::once(enc.finish()));
 
     let slice = buf.slice(..);
     let (tx, rx) = std::sync::mpsc::channel();
-    slice.map_async(wgpu::MapMode::Read, move |r| { tx.send(r).unwrap(); });
+    slice.map_async(wgpu::MapMode::Read, move |r| {
+        tx.send(r).unwrap();
+    });
 
     let timeout = std::time::Instant::now();
     loop {
@@ -185,7 +233,10 @@ fn save(renderer: &ShapeRenderer, texture: &wgpu::Texture, w: u32, h: u32, filen
                 if timeout.elapsed().as_secs() > 10 {
                     panic!("Buffer mapping timed out");
                 }
-                renderer.get_device().poll(wgpu::PollType::Wait { submission_index: None, timeout: None });
+                renderer.get_device().poll(wgpu::PollType::Wait {
+                    submission_index: None,
+                    timeout: None,
+                });
                 std::thread::yield_now();
             }
             Err(std::sync::mpsc::TryRecvError::Disconnected) => panic!("Channel disconnected"),

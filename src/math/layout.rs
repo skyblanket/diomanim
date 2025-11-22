@@ -71,11 +71,7 @@ impl MathLayout {
     }
 
     /// Layout a fraction: numerator over denominator
-    fn layout_fraction(
-        numerator: &MathNode,
-        denominator: &MathNode,
-        font_size: f32,
-    ) -> MathLayout {
+    fn layout_fraction(numerator: &MathNode, denominator: &MathNode, font_size: f32) -> MathLayout {
         let small_size = font_size * 0.7; // Smaller font for fractions
 
         let mut num_layout = Self::layout_node(numerator, small_size);

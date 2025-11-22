@@ -13,39 +13,59 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut scene = SceneGraph::new();
 
     // Just 3 big circles - guaranteed to be separate
-    let c1 = scene.create_node_with_transform("C1".into(), Transform::from_translation(-0.5, 0.0, 0.0));
-    scene.get_node_mut(c1).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.3,
-        color: Color::new(1.0, 0.3, 0.3),
-    });
+    let c1 =
+        scene.create_node_with_transform("C1".into(), Transform::from_translation(-0.5, 0.0, 0.0));
+    scene
+        .get_node_mut(c1)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.3,
+            color: Color::new(1.0, 0.3, 0.3),
+        });
 
-    let c2 = scene.create_node_with_transform("C2".into(), Transform::from_translation(0.0, 0.0, 0.0));
-    scene.get_node_mut(c2).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.3,
-        color: Color::new(0.3, 1.0, 0.3),
-    });
+    let c2 =
+        scene.create_node_with_transform("C2".into(), Transform::from_translation(0.0, 0.0, 0.0));
+    scene
+        .get_node_mut(c2)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.3,
+            color: Color::new(0.3, 1.0, 0.3),
+        });
 
-    let c3 = scene.create_node_with_transform("C3".into(), Transform::from_translation(0.5, 0.0, 0.0));
-    scene.get_node_mut(c3).unwrap().set_renderable(Renderable::Circle {
-        radius: 0.3,
-        color: Color::new(0.3, 0.3, 1.0),
-    });
+    let c3 =
+        scene.create_node_with_transform("C3".into(), Transform::from_translation(0.5, 0.0, 0.0));
+    scene
+        .get_node_mut(c3)
+        .unwrap()
+        .set_renderable(Renderable::Circle {
+            radius: 0.3,
+            color: Color::new(0.3, 0.3, 1.0),
+        });
 
     scene.update_transforms();
 
-    let tex = renderer.get_device().create_texture(&wgpu::TextureDescriptor {
-        label: None,
-        size: wgpu::Extent3d { width: WIDTH, height: HEIGHT, depth_or_array_layers: 1 },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: wgpu::TextureFormat::Rgba8Unorm,
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-        view_formats: &[],
-    });
+    let tex = renderer
+        .get_device()
+        .create_texture(&wgpu::TextureDescriptor {
+            label: None,
+            size: wgpu::Extent3d {
+                width: WIDTH,
+                height: HEIGHT,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats: &[],
+        });
     let view = tex.create_view(&wgpu::TextureViewDescriptor::default());
 
-    let mut enc = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+    let mut enc = renderer
+        .get_device()
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
     let mut pass = renderer.begin_render_pass(&mut enc, &view, None);
     pass.set_pipeline(renderer.get_pipeline());
     pass.set_bind_group(0, renderer.get_transform_bind_group(), &[]);
@@ -56,7 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let c = diomanim::mobjects::Circle {
                 radius: *rad,
                 color: Color::rgba(col.r, col.g, col.b, col.a * o),
-                position: Vector3::zero()
+                position: Vector3::zero(),
             };
             renderer.draw_circle(&c, Color::rgba(col.r, col.g, col.b, col.a * o), &mut pass);
         }
@@ -71,14 +91,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     const A: u32 = 256;
     let u = WIDTH * 4;
     let p = (u + A - 1) / A * A;
-    let buf = renderer.get_device().create_buffer(&wgpu::BufferDescriptor {
-        label: None,
-        size: (p * HEIGHT) as u64,
-        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-        mapped_at_creation: false,
-    });
+    let buf = renderer
+        .get_device()
+        .create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: (p * HEIGHT) as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
 
-    let mut enc = renderer.get_device().create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+    let mut enc = renderer
+        .get_device()
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
     enc.copy_texture_to_buffer(
         tex.as_image_copy(),
         wgpu::TexelCopyBufferInfo {
@@ -89,13 +113,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 rows_per_image: Some(HEIGHT),
             },
         },
-        wgpu::Extent3d { width: WIDTH, height: HEIGHT, depth_or_array_layers: 1 },
+        wgpu::Extent3d {
+            width: WIDTH,
+            height: HEIGHT,
+            depth_or_array_layers: 1,
+        },
     );
     renderer.get_queue().submit(std::iter::once(enc.finish()));
 
     let slice = buf.slice(..);
     let (tx, rx) = std::sync::mpsc::channel();
-    slice.map_async(wgpu::MapMode::Read, move |r| { tx.send(r).unwrap(); });
+    slice.map_async(wgpu::MapMode::Read, move |r| {
+        tx.send(r).unwrap();
+    });
 
     let timeout = std::time::Instant::now();
     loop {
@@ -103,8 +133,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(Ok(())) => break,
             Ok(Err(e)) => panic!("{:?}", e),
             Err(std::sync::mpsc::TryRecvError::Empty) => {
-                if timeout.elapsed().as_secs() > 10 { panic!("Timeout"); }
-                renderer.get_device().poll(wgpu::PollType::Wait { submission_index: None, timeout: None });
+                if timeout.elapsed().as_secs() > 10 {
+                    panic!("Timeout");
+                }
+                renderer.get_device().poll(wgpu::PollType::Wait {
+                    submission_index: None,
+                    timeout: None,
+                });
                 std::thread::yield_now();
             }
             Err(std::sync::mpsc::TryRecvError::Disconnected) => panic!("Disconnected"),
