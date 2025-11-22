@@ -606,7 +606,7 @@ impl ShapeRenderer {
         ];
 
         // Create index buffer for two triangles
-        let indices = vec![0, 1, 2, 0, 2, 3];
+        let indices: Vec<u16> = vec![0, 1, 2, 0, 2, 3];
 
         // Create GPU buffers
         let vertex_buffer = self
@@ -708,7 +708,7 @@ impl ShapeRenderer {
         ];
 
         // Triangle indices
-        let indices = vec![0, 1, 2];
+        let indices: Vec<u16> = vec![0, 1, 2];
 
         // Create GPU buffers
         let vertex_buffer = self

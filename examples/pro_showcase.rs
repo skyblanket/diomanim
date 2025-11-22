@@ -65,7 +65,7 @@ fn build_main_showcase() -> SceneGraph {
         let x_start = -0.7;
         let x_end = 0.7;
         let y = y2 + i as f32 * 0.15 - 0.15;
-        let thickness = 0.01 + i as f32 * 0.015;
+        let thickness = 1.5 + i as f32 * 0.5; // Reasonable thickness for showcase
 
         let line = s.create_node(format!("Line{}", i));
         s.get_node_mut(line)
@@ -91,7 +91,7 @@ fn build_main_showcase() -> SceneGraph {
                 start: Vector3::new(x_start, y3, 0.0),
                 end: Vector3::new(x_end, y3, 0.0),
                 color: Color::new(1.0 - i as f32 * 0.2, 0.5 + i as f32 * 0.1, i as f32 * 0.25),
-                thickness: 0.02,
+                thickness: 2.0,
             });
     }
 
@@ -290,7 +290,7 @@ async fn render_frame(
     let mut pass = renderer.begin_render_pass(&mut enc, &view, None);
     pass.set_pipeline(renderer.get_pipeline());
 
-    for (t, r, o) in scene.get_visible_renderables() {
+    for (t, r, o) in scene.get_visible_renderables().iter() {
         let offset = renderer.update_transform(&t);
         let a = |c: Color| Color::rgba(c.r, c.g, c.b, c.a * o);
 
