@@ -41,8 +41,14 @@
 use crate::core::{Color, Vector3};
 use crate::mobjects::Circle;
 use crate::text::GlyphAtlas;
-use wgpu::util::DeviceExt;
 use std::sync::{Arc, Mutex};
+use wgpu::util::DeviceExt;
+
+/// Maximum number of objects that can be rendered in a single pass
+const MAX_OBJECTS_PER_PASS: usize = 1024;
+
+/// Alignment requirement for uniform buffers (must be 256 bytes on most GPUs)
+const UNIFORM_ALIGNMENT: u64 = 256;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
@@ -91,6 +97,10 @@ pub struct ShapeRenderer {
     pipeline: wgpu::RenderPipeline,
     transform_bind_group: wgpu::BindGroup,
     transform_buffer: wgpu::Buffer,
+    /// Current offset into transform buffer (in aligned units)
+    current_transform_offset: std::cell::Cell<u32>,
+    /// Size of each aligned transform slot
+    aligned_transform_size: u64,
     // Text rendering components
     text_pipeline: Option<wgpu::RenderPipeline>,
     text_atlas: Option<Arc<Mutex<GlyphAtlas>>>,
@@ -126,15 +136,30 @@ impl ShapeRenderer {
             })
             .await?;
 
-        // Create transform uniform buffer
-        let transform_uniform = TransformUniform::identity();
-        let transform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        // Calculate aligned size for each transform (256-byte alignment required)
+        let base_size = std::mem::size_of::<TransformUniform>() as u64;
+        let aligned_transform_size =
+            ((base_size + UNIFORM_ALIGNMENT - 1) / UNIFORM_ALIGNMENT) * UNIFORM_ALIGNMENT;
+
+        // Create buffer large enough for MAX_OBJECTS_PER_PASS transforms
+        let buffer_size = aligned_transform_size * MAX_OBJECTS_PER_PASS as u64;
+
+        let transform_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Transform Uniform Buffer"),
-            contents: bytemuck::cast_slice(&[transform_uniform]),
+            size: buffer_size,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
         });
 
-        // Create bind group layout for transform
+        // Initialize first transform to identity
+        let transform_uniform = TransformUniform::identity();
+        queue.write_buffer(
+            &transform_buffer,
+            0,
+            bytemuck::cast_slice(&[transform_uniform]),
+        );
+
+        // Create bind group layout for transform with dynamic offsets enabled
         let transform_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 label: Some("Transform Bind Group Layout"),
@@ -143,20 +168,27 @@ impl ShapeRenderer {
                     visibility: wgpu::ShaderStages::VERTEX,
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
+                        has_dynamic_offset: true, // Enable dynamic offsets
+                        min_binding_size: std::num::NonZeroU64::new(std::mem::size_of::<
+                            TransformUniform,
+                        >()
+                            as u64),
                     },
                     count: None,
                 }],
             });
 
-        // Create bind group
+        // Create bind group (bind only one slot, dynamic offset will shift to others)
         let transform_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("Transform Bind Group"),
             layout: &transform_bind_group_layout,
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,
-                resource: transform_buffer.as_entire_binding(),
+                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                    buffer: &transform_buffer,
+                    offset: 0,
+                    size: std::num::NonZeroU64::new(aligned_transform_size),
+                }),
             }],
         });
 
@@ -236,6 +268,8 @@ impl ShapeRenderer {
             pipeline,
             transform_bind_group,
             transform_buffer,
+            current_transform_offset: std::cell::Cell::new(0),
+            aligned_transform_size,
             text_pipeline: None,
             text_atlas: None,
             text_texture: None,
@@ -372,7 +406,13 @@ impl ShapeRenderer {
         self.queue.submit(std::iter::once(encoder.finish()));
     }
 
-    pub fn draw_circle(&self, circle: &Circle, color: Color, render_pass: &mut wgpu::RenderPass) {
+    pub fn draw_circle(
+        &self,
+        circle: &Circle,
+        color: Color,
+        dynamic_offset: u32,
+        render_pass: &mut wgpu::RenderPass,
+    ) {
         // Create vertices for a circle centered at origin
         // Position is handled by transform uniform
         let mut vertices = Vec::new();
@@ -424,6 +464,9 @@ impl ShapeRenderer {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
+        // Set bind group with dynamic offset
+        render_pass.set_bind_group(0, &self.transform_bind_group, &[dynamic_offset]);
+
         // Set vertex and index buffers
         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
@@ -437,6 +480,7 @@ impl ShapeRenderer {
         width: f32,
         height: f32,
         color: Color,
+        dynamic_offset: u32,
         render_pass: &mut wgpu::RenderPass,
     ) {
         let center = [0.0, 0.0, 0.0]; // Position handled by transform uniform
@@ -485,6 +529,9 @@ impl ShapeRenderer {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
+        // Set bind group with dynamic offset
+        render_pass.set_bind_group(0, &self.transform_bind_group, &[dynamic_offset]);
+
         // Set vertex and index buffers
         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
@@ -499,6 +546,7 @@ impl ShapeRenderer {
         end: Vector3,
         color: Color,
         thickness: f32,
+        dynamic_offset: u32,
         render_pass: &mut wgpu::RenderPass,
     ) {
         let dir = Vector3::new(end.x - start.x, end.y - start.y, 0.0);
@@ -577,6 +625,9 @@ impl ShapeRenderer {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
+        // Set bind group with dynamic offset
+        render_pass.set_bind_group(0, &self.transform_bind_group, &[dynamic_offset]);
+
         // Set vertex and index buffers
         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
@@ -591,6 +642,7 @@ impl ShapeRenderer {
         end: Vector3,
         color: Color,
         thickness: f32,
+        dynamic_offset: u32,
         render_pass: &mut wgpu::RenderPass,
     ) {
         // First draw the line (shaft)
@@ -615,7 +667,14 @@ impl ShapeRenderer {
         };
 
         // Draw the shaft
-        self.draw_line(start, line_end, color, thickness, render_pass);
+        self.draw_line(
+            start,
+            line_end,
+            color,
+            thickness,
+            dynamic_offset,
+            render_pass,
+        );
 
         // Draw the triangular tip
         let dir_norm = Vector3::new(dir.x / length, dir.y / length, 0.0);
@@ -668,6 +727,9 @@ impl ShapeRenderer {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
+        // Set bind group with dynamic offset
+        render_pass.set_bind_group(0, &self.transform_bind_group, &[dynamic_offset]);
+
         // Set vertex and index buffers
         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
@@ -676,12 +738,32 @@ impl ShapeRenderer {
         render_pass.draw_indexed(0..indices.len() as u32, 0, 0..1);
     }
 
-    pub fn update_transform(&self, transform: &TransformUniform) {
+    /// Update transform for the next draw call
+    /// Returns the offset to use with set_bind_group()
+    pub fn update_transform(&self, transform: &TransformUniform) -> u32 {
+        // Get current offset
+        let offset_index = self.current_transform_offset.get();
+        let byte_offset = offset_index as u64 * self.aligned_transform_size;
+
+        // Write transform to the appropriate offset
         self.queue.write_buffer(
             &self.transform_buffer,
-            0,
+            byte_offset,
             bytemuck::cast_slice(&[*transform]),
         );
+
+        // Increment offset for next object (with wraparound)
+        let next_offset = (offset_index + 1) % MAX_OBJECTS_PER_PASS as u32;
+        self.current_transform_offset.set(next_offset);
+
+        // Return the dynamic offset for set_bind_group
+        // NOTE: set_bind_group expects offset in BYTES, not indices
+        offset_index * self.aligned_transform_size as u32
+    }
+
+    /// Reset transform offset counter (call at start of each frame)
+    pub fn reset_transform_offset(&self) {
+        self.current_transform_offset.set(0);
     }
 
     pub fn get_device(&self) -> &wgpu::Device {
@@ -701,7 +783,10 @@ impl ShapeRenderer {
     }
 
     /// Initialize text rendering system
-    pub fn init_text_rendering(&mut self, font_size: f32) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn init_text_rendering(
+        &mut self,
+        font_size: f32,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         // Create glyph atlas
         let atlas = Arc::new(Mutex::new(GlyphAtlas::from_system_font(font_size)?));
 
@@ -790,9 +875,7 @@ impl ShapeRenderer {
             });
 
         // Get transform bind group layout from existing pipeline
-        let transform_bind_group_layout = self
-            .pipeline
-            .get_bind_group_layout(0);
+        let transform_bind_group_layout = self.pipeline.get_bind_group_layout(0);
 
         // Create text pipeline layout
         let text_pipeline_layout =
@@ -884,6 +967,7 @@ impl ShapeRenderer {
         &self,
         vertices: &[Vector3],
         color: Color,
+        dynamic_offset: u32,
         render_pass: &mut wgpu::RenderPass,
     ) {
         if vertices.len() < 3 {
@@ -926,6 +1010,9 @@ impl ShapeRenderer {
                 usage: wgpu::BufferUsages::INDEX,
             });
 
+        // Set bind group with dynamic offset
+        render_pass.set_bind_group(0, &self.transform_bind_group, &[dynamic_offset]);
+
         // Set vertex and index buffers
         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
@@ -940,24 +1027,22 @@ impl ShapeRenderer {
         content: &str,
         font_size: f32,
         color: Color,
+        dynamic_offset: u32,
         render_pass: &mut wgpu::RenderPass,
     ) {
         // Check if text rendering is initialized
-        let (text_pipeline, text_atlas, text_bind_group) = match (
-            &self.text_pipeline,
-            &self.text_atlas,
-            &self.text_bind_group,
-        ) {
-            (Some(pipeline), Some(atlas), Some(bind_group)) => (pipeline, atlas, bind_group),
-            _ => {
-                // Fallback to rectangle if not initialized
-                let char_width = 0.6 * font_size / 1000.0;
-                let width = char_width * content.len() as f32;
-                let height = font_size / 1000.0;
-                self.draw_rectangle(width, height, color, render_pass);
-                return;
-            }
-        };
+        let (text_pipeline, text_atlas, text_bind_group) =
+            match (&self.text_pipeline, &self.text_atlas, &self.text_bind_group) {
+                (Some(pipeline), Some(atlas), Some(bind_group)) => (pipeline, atlas, bind_group),
+                _ => {
+                    // Fallback to rectangle if not initialized
+                    let char_width = 0.6 * font_size / 1000.0;
+                    let width = char_width * content.len() as f32;
+                    let height = font_size / 1000.0;
+                    self.draw_rectangle(width, height, color, dynamic_offset, render_pass);
+                    return;
+                }
+            };
 
         // Lock atlas and rasterize all glyphs
         let mut atlas_guard = text_atlas.lock().unwrap();
@@ -1075,7 +1160,7 @@ impl ShapeRenderer {
 
         // Render text
         render_pass.set_pipeline(text_pipeline);
-        render_pass.set_bind_group(0, &self.transform_bind_group, &[]);
+        render_pass.set_bind_group(0, &self.transform_bind_group, &[dynamic_offset]);
         render_pass.set_bind_group(1, text_bind_group, &[]);
         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
@@ -1091,6 +1176,7 @@ impl ShapeRenderer {
         latex: &str,
         base_font_size: f32,
         color: Color,
+        dynamic_offset: u32,
         render_pass: &mut wgpu::RenderPass,
     ) {
         use crate::math::{expression::parse_latex, layout::MathLayout};
@@ -1111,7 +1197,7 @@ impl ShapeRenderer {
         for (_position, text, font_size) in elements {
             // Draw the text at its relative position
             // The positioning is handled by the layout system
-            self.draw_text(&text, font_size, color, render_pass);
+            self.draw_text(&text, font_size, color, dynamic_offset, render_pass);
         }
     }
 }

@@ -167,6 +167,9 @@ impl PreviewApp {
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
 
+        // Reset transform offset counter before starting new frame
+        renderer.reset_transform_offset();
+
         // Create command encoder
         let mut encoder =
             renderer
@@ -178,12 +181,11 @@ impl PreviewApp {
         // Begin render pass
         let mut render_pass = renderer.begin_render_pass(&mut encoder, &view, None);
         render_pass.set_pipeline(renderer.get_pipeline());
-        render_pass.set_bind_group(0, renderer.get_transform_bind_group(), &[]);
 
         // Render all visible objects
         let renderables = self.scene.get_visible_renderables();
         for (transform_uniform, renderable, opacity) in renderables {
-            renderer.update_transform(&transform_uniform);
+            let offset = renderer.update_transform(&transform_uniform);
 
             // Apply opacity to color
             let apply_opacity = |color: Color| -> Color {
@@ -196,15 +198,22 @@ impl PreviewApp {
                     color: apply_opacity(*color),
                     position: Vector3::zero(),
                 };
-                renderer.draw_circle(&circle, apply_opacity(*color), &mut render_pass);
+                renderer.draw_circle(&circle, apply_opacity(*color), offset, &mut render_pass);
             } else if let Some((width, height, color)) = renderable.as_rectangle() {
-                renderer.draw_rectangle(*width, *height, apply_opacity(*color), &mut render_pass);
+                renderer.draw_rectangle(
+                    *width,
+                    *height,
+                    apply_opacity(*color),
+                    offset,
+                    &mut render_pass,
+                );
             } else if let Some((start, end, color, thickness)) = renderable.as_line() {
                 renderer.draw_line(
                     *start,
                     *end,
                     apply_opacity(*color),
                     *thickness,
+                    offset,
                     &mut render_pass,
                 );
             } else if let Some((start, end, color, thickness)) = renderable.as_arrow() {
@@ -213,14 +222,27 @@ impl PreviewApp {
                     *end,
                     apply_opacity(*color),
                     *thickness,
+                    offset,
                     &mut render_pass,
                 );
             } else if let Some((vertices, color)) = renderable.as_polygon() {
-                renderer.draw_polygon(vertices, apply_opacity(*color), &mut render_pass);
+                renderer.draw_polygon(vertices, apply_opacity(*color), offset, &mut render_pass);
             } else if let Some((content, font_size, color)) = renderable.as_text() {
-                renderer.draw_text(content, *font_size, apply_opacity(*color), &mut render_pass);
+                renderer.draw_text(
+                    content,
+                    *font_size,
+                    apply_opacity(*color),
+                    offset,
+                    &mut render_pass,
+                );
             } else if let Some((latex, font_size, color)) = renderable.as_math() {
-                renderer.draw_math(latex, *font_size, apply_opacity(*color), &mut render_pass);
+                renderer.draw_math(
+                    latex,
+                    *font_size,
+                    apply_opacity(*color),
+                    offset,
+                    &mut render_pass,
+                );
             }
         }
 
