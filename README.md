@@ -17,9 +17,9 @@
 
 ### Feature Gallery
 
-| Shapes & Lines | Arrows | Star | Circle |
-|----------------|--------|------|--------|
-| ![Showcase](docs/images/diomanim_showcase.png) | ![Shapes](docs/images/shapes_showcase.png) | ![Star](docs/images/star_test.png) | ![Circle](docs/images/circle_test.png) |
+| Shapes & Lines | Arrows | Fibonacci Spiral | Wave Propagation |
+|----------------|--------|------------------|------------------|
+| ![Showcase](docs/images/diomanim_showcase.png) | ![Shapes](docs/images/shapes_showcase.png) | ![Fibonacci](docs/images/fibonacci_spiral.png) | ![Wave](docs/images/wave.png) |
 
 ---
 
@@ -103,7 +103,8 @@ Real-world benchmarks on 1920x1080 resolution with 10 objects:
 
 **Current Status:**
 - ✅ Scene Builder API - Fluent interface already implemented!
-- ✅ Fibonacci Spiral - First mathematical showcase (800 circles)
+- ✅ Fibonacci Spiral - Mathematical showcase (800 circles, golden ratio)
+- ✅ Wave Propagation - Physics simulation (240 particles, 3 waves)
 - 📋 Roadmap - Detailed Phase 2 plan in [PHASE2_ROADMAP.md](PHASE2_ROADMAP.md)
 
 ### v0.2.0 (November 2025) - Phase 1 Complete ✅
@@ -155,6 +156,12 @@ cargo run --release --example math_demo
 
 # 🔥 Gradient Descent Optimization (ML Visualization)
 cargo run --release --example gradient_descent
+
+# 🌀 Fibonacci Spiral (Phase 2 - Golden ratio visualization)
+cargo run --release --example fibonacci_spiral
+
+# 🌊 Wave Propagation (Phase 2 - Physics simulation)
+cargo run --release --example wave_propagation
 
 # Performance benchmark
 cargo run --release --example benchmark
