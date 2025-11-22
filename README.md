@@ -91,7 +91,22 @@ Real-world benchmarks on 1920x1080 resolution with 10 objects:
 
 ## 🔥 Recent Updates
 
-### v0.2.0 (November 2025)
+### 🚀 Phase 2: Advanced Features (In Progress)
+**Goal:** Professional-grade animation engine with advanced capabilities
+
+**Planned Features:**
+- 🎥 Camera System - Zoom, pan, cinematic effects
+- 🎨 Advanced Animations - Motion paths, morphing, indicate effects
+- ⚡ Performance Optimizations - Instancing for 5000+ objects
+- 📚 Professional Examples - Math, algorithms, physics showcases
+- 🎬 Export Improvements - GIF, WebM support
+
+**Current Status:**
+- ✅ Scene Builder API - Fluent interface already implemented!
+- ✅ Fibonacci Spiral - First mathematical showcase (800 circles)
+- 📋 Roadmap - Detailed Phase 2 plan in [PHASE2_ROADMAP.md](PHASE2_ROADMAP.md)
+
+### v0.2.0 (November 2025) - Phase 1 Complete ✅
 - ✅ **Multi-object rendering bug FIXED** - Dynamic uniform buffer offsets now working
 - ✅ **Lines & arrows rendering** - Fixed index buffer type mismatch (u16)
 - ✅ **Apple Watch rainbow** - 1,440 circle concentric rings showcase
