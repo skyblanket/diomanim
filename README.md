@@ -7,6 +7,8 @@
 
 **Diomanim** is a high-performance animation engine built with Rust and WebGPU. Create mathematical animations with GPU-accelerated rendering, Manim-style effects, and export to high-quality MP4 videos.
 
+![Diomanim Showcase](docs/images/diomanim_showcase.png)
+
 ---
 
 ## ⚡ Performance
