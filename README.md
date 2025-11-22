@@ -10,9 +10,9 @@
 ## 🎬 Showcase
 
 <p align="center">
-  <img src="docs/images/rainbow.png" alt="Rainbow Arc" width="800"/>
+  <img src="docs/images/rainbow.png" alt="Rainbow Rings" width="800"/>
   <br/>
-  <em>120 circles, dynamic offsets, 60 FPS rendering - Apple Watch-style rainbow</em>
+  <em>1,440 circles (6 rings × 240/ring) - Apple Watch-style rainbow with smooth gradients</em>
 </p>
 
 ### Feature Gallery
@@ -84,6 +84,21 @@ Real-world benchmarks on 1920x1080 resolution with 10 objects:
 - ✅ **SIMD math** - Hardware-accelerated vector operations
 - ✅ **Zero-copy rendering** - Efficient GPU buffer management
 - ✅ **Type-safe** - Rust compile-time guarantees
+- ✅ **Dynamic uniform offsets** - Multi-object rendering in single pass (FIXED!)
+- ✅ **Proper index buffers** - u16 types for all draw calls (FIXED!)
+
+---
+
+## 🔥 Recent Updates
+
+### v0.2.0 (November 2025)
+- ✅ **Multi-object rendering bug FIXED** - Dynamic uniform buffer offsets now working
+- ✅ **Lines & arrows rendering** - Fixed index buffer type mismatch (u16)
+- ✅ **Apple Watch rainbow** - 1,440 circle concentric rings showcase
+- ✅ **Professional showcases** - High-quality demo images in README
+- ✅ **Smooth gradients** - 240 circles per ring for seamless color transitions
+
+**Key Fix:** Objects with different transforms now render at correct positions using dynamic offsets to a 256KB uniform buffer supporting up to 1,024 objects per render pass.
 
 ---
 

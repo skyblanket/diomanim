@@ -69,39 +69,44 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn build_rainbow_arc() -> SceneGraph {
     let mut s = SceneGraph::new();
 
-    // Arc parameters
-    let radius = 0.6; // Distance from center
-    let num_circles = 120; // Number of circles for smooth gradient
-    let circle_size = 0.035; // Size of each circle
-    let start_angle = -135.0f32; // Start angle in degrees
-    let end_angle = 135.0f32; // End angle in degrees (270 degree arc)
+    // Apple Watch-style concentric rings
+    let num_rings = 6; // Number of concentric rings
+    let base_radius = 0.15; // Starting radius
+    let ring_spacing = 0.07; // Space between rings
+    let circles_per_ring = 240; // More circles = smoother gradient
+    let circle_size = 0.014; // Smaller circles for smoother appearance
 
-    for i in 0..num_circles {
-        let progress = i as f32 / (num_circles - 1) as f32;
+    for ring_idx in 0..num_rings {
+        let radius = base_radius + ring_idx as f32 * ring_spacing;
 
-        // Calculate angle
-        let angle_deg = start_angle + (end_angle - start_angle) * progress;
-        let angle_rad = angle_deg.to_radians();
+        // Each ring has a different color range
+        let hue_offset = ring_idx as f32 * 0.15; // Offset colors between rings
 
-        // Calculate position on arc
-        let x = radius * angle_rad.cos();
-        let y = radius * angle_rad.sin();
+        for i in 0..circles_per_ring {
+            let progress = i as f32 / circles_per_ring as f32;
 
-        // Calculate rainbow color (full spectrum)
-        let hue = progress; // 0.0 to 1.0 for full rainbow
-        let (r, g, b) = hsv_to_rgb(hue, 0.85, 1.0);
+            // Full circle (360 degrees)
+            let angle = progress * 2.0 * std::f32::consts::PI;
 
-        // Create circle
-        let node = s.create_node_with_transform(
-            format!("rainbow_{}", i),
-            Transform::from_translation(x, y, 0.0),
-        );
-        s.get_node_mut(node)
-            .unwrap()
-            .set_renderable(Renderable::Circle {
-                radius: circle_size,
-                color: Color::new(r, g, b),
-            });
+            // Position on ring
+            let x = radius * angle.cos();
+            let y = radius * angle.sin();
+
+            // Rainbow gradient that cycles around the ring
+            let hue = (progress + hue_offset) % 1.0;
+            let (r, g, b) = hsv_to_rgb(hue, 0.9, 1.0);
+
+            let node = s.create_node_with_transform(
+                format!("ring{}_{}", ring_idx, i),
+                Transform::from_translation(x, y, 0.0),
+            );
+            s.get_node_mut(node)
+                .unwrap()
+                .set_renderable(Renderable::Circle {
+                    radius: circle_size,
+                    color: Color::new(r, g, b),
+                });
+        }
     }
 
     s
