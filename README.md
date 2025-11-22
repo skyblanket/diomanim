@@ -10,6 +10,14 @@
 ## 🎬 Showcase
 
 <p align="center">
+  <img src="docs/images/rose_curve.gif" alt="Rose Curve Animation" width="800"/>
+  <br/>
+  <em>🌹 <strong>Rose Curve Animation</strong> - Mathematical beauty in motion</em>
+  <br/>
+  <sub>Parametric equation: r = cos(5θ) · creating a perfect 5-petal rose with rainbow gradient</sub>
+</p>
+
+<p align="center">
   <img src="docs/images/rainbow.png" alt="Rainbow Rings" width="800"/>
   <br/>
   <em>1,440 circles (6 rings × 240/ring) - Apple Watch-style rainbow with smooth gradients</em>
@@ -166,6 +174,9 @@ cargo run --release --example wave_propagation
 
 # 📊 Bubble Sort (Phase 2 - Algorithm visualization)
 cargo run --release --example bubble_sort
+
+# 🌹 Rose Curve (Phase 2 - Parametric equations, GIF export)
+cargo run --release --example rose_curve
 
 # Performance benchmark
 cargo run --release --example benchmark
