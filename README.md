@@ -7,6 +7,16 @@
 
 **Diomanim** is a high-performance animation engine built with Rust and WebGPU. Create mathematical animations with GPU-accelerated rendering, Manim-style effects, and export to high-quality MP4 videos.
 
+## 🎬 Showcase
+
+| Multiple Shapes | Star | Circle | Rectangle |
+|----------------|------|--------|-----------|
+| ![Showcase](docs/images/visual_test.png) | ![Star](docs/images/star_test.png) | ![Circle](docs/images/circle_test.png) | ![Rectangle](docs/images/rectangle_test.png) |
+
+**Full Animation Examples:**
+- 🎨 [showcase_start.png](docs/images/showcase_start.png) - Multiple overlapping shapes
+- ⚡ [phase2_demo.png](docs/images/phase2_demo.png) - Transform animations
+
 ---
 
 ## ⚡ Performance
