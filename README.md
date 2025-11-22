@@ -9,13 +9,17 @@
 
 ## 🎬 Showcase
 
-| Multiple Shapes | Star | Circle | Rectangle |
-|----------------|------|--------|-----------|
-| ![Showcase](docs/images/visual_test.png) | ![Star](docs/images/star_test.png) | ![Circle](docs/images/circle_test.png) | ![Rectangle](docs/images/rectangle_test.png) |
+<p align="center">
+  <img src="docs/images/rainbow.png" alt="Rainbow Arc" width="800"/>
+  <br/>
+  <em>120 circles, dynamic offsets, 60 FPS rendering - Apple Watch-style rainbow</em>
+</p>
 
-**Full Animation Examples:**
-- 🎨 [showcase_start.png](docs/images/showcase_start.png) - Multiple overlapping shapes
-- ⚡ [phase2_demo.png](docs/images/phase2_demo.png) - Transform animations
+### Feature Gallery
+
+| Shapes & Lines | Arrows | Star | Circle |
+|----------------|--------|------|--------|
+| ![Showcase](docs/images/diomanim_showcase.png) | ![Shapes](docs/images/shapes_showcase.png) | ![Star](docs/images/star_test.png) | ![Circle](docs/images/circle_test.png) |
 
 ---
 
