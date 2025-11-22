@@ -120,8 +120,16 @@ cargo run --release --example benchmark
 
 Watch gradient descent optimization come to life with mathematical notation, animated convergence, and color-coded steps!
 
+![Gradient Descent Preview](docs/images/gradient_descent_preview.png)
+
+**🎬 Demo Video:** Successfully rendered! (180 frames @ 480x270, 30 FPS)
+
 ```bash
+# Run live preview
 cargo run --release --example gradient_descent
+
+# Generate video frames (requires GPU)
+cargo run --release --example gradient_descent_quick
 ```
 
 **What it shows:**
@@ -131,6 +139,8 @@ cargo run --release --example gradient_descent
 - 6 optimization steps with animated arrows
 - Color gradient showing convergence (blue → green)
 - Step labels and smooth animations
+
+**Performance:** Rendered 180 frames in 14.4s (12.5 FPS avg)
 
 Perfect for ML education and algorithm visualization!
 
