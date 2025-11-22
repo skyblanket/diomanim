@@ -677,11 +677,21 @@ impl ShapeRenderer {
     }
 
     pub fn update_transform(&self, transform: &TransformUniform) {
+        // CRITICAL FIX: Write buffer and immediately submit to ensure visibility
+        // This is necessary because buffer writes during a render pass aren't
+        // visible to draw calls until after submission.
         self.queue.write_buffer(
             &self.transform_buffer,
             0,
             bytemuck::cast_slice(&[*transform]),
         );
+
+        // Force the write to complete by polling the device
+        // This ensures each draw call sees the correct transform
+        self.device.poll(wgpu::PollType::Wait {
+            submission_index: None,
+            timeout: None,
+        });
     }
 
     pub fn get_device(&self) -> &wgpu::Device {
